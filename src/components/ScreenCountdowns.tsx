@@ -61,6 +61,51 @@ const parseDuration = (value: string) => {
     return null;
 };
 
+const getDaysSinceBreakdown = (targetAt: string, now: number) => {
+    if (!targetAt) return null;
+    const cleanDate = targetAt.split("T")[0];
+    const parts = cleanDate.split("-").map(Number);
+    if (parts.length < 3 || parts.some(isNaN)) return null;
+    const [y1, m1, d1] = parts;
+
+    const start = new Date(y1, m1 - 1, d1);
+    const end = new Date(now);
+
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+    if (e.getTime() < s.getTime()) return null;
+
+    let years = e.getFullYear() - s.getFullYear();
+    let months = e.getMonth() - s.getMonth();
+    let days = e.getDate() - s.getDate();
+
+    if (days < 0) {
+        const prevMonthDate = new Date(e.getFullYear(), e.getMonth(), 0);
+        const prevMonthLastDay = prevMonthDate.getDate();
+        const adjustedStartDay = Math.min(s.getDate(), prevMonthLastDay);
+        days = e.getDate() + (prevMonthLastDay - adjustedStartDay);
+        months--;
+    }
+
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    if (years === 0 && months === 0) {
+        return null;
+    }
+
+    const resultParts: string[] = [];
+    if (years > 0) resultParts.push(`${years} năm`);
+    if (months > 0) resultParts.push(`${months} tháng`);
+    if (days > 0) resultParts.push(`${days} ngày`);
+
+    if (resultParts.length === 0) return null;
+    return resultParts.join(", ");
+};
+
 const formatCountdown = (countdown: Countdown, now: number) => {
     const type = countdown.type ?? "hoursUntil";
 
@@ -366,9 +411,16 @@ export default function ScreenCountdowns() {
                                         <Clock3 size={11} />
                                         {getTypeLabel(countdown.type ?? "hoursUntil")} · {countdown.type === "duration" ? `tổng cộng ${formatTime(countdown.durationSeconds ?? 0)}` : countdown.type === "dailyCountdown" ? countdown.targetAt : new Date(countdown.targetAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: countdown.type === "daysSince" ? undefined : "short" })}
                                     </p>
-                                    <p className="mt-2 text-lg font-semibold tabular-nums text-white/90">
-                                        {formatCountdown(countdown, now)}
-                                    </p>
+                                    <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 tabular-nums">
+                                        <span className="text-lg font-semibold text-white/90">
+                                            {formatCountdown(countdown, now)}
+                                        </span>
+                                        {countdown.type === "daysSince" && getDaysSinceBreakdown(countdown.targetAt, now) && (
+                                            <span className="text-xs sm:text-sm font-normal text-white/60">
+                                                ({getDaysSinceBreakdown(countdown.targetAt, now)})
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <button
