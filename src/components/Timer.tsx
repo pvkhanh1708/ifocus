@@ -214,87 +214,93 @@ export default function Timer({ onClose }: TimerProps) {
 
     return (
         <div className="group relative flex items-center justify-center p-8 transition-all duration-500 ease-in-out text-white max-w-md mx-auto hover:bg-black/40 hover:backdrop-blur-md rounded-3xl font-sans">
-            {/* Mode Selectors - Absolutely positioned above timer display */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 flex flex-nowrap whitespace-nowrap sm:space-x-2 space-x-1 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 bg-white/10">
-                {(
-                    [
-                        "pomodoro",
-                        "shortBreak",
-                        "longBreak",
-                        "stopwatch",
-                        "clock",
-                        "dateCountdown",
-                        "dailyCountdown",
-                    ] as TimerMode[]
-                ).map((m) => (
-                    <button
-                        key={m}
-                        onClick={() => setMode(m)}
-                        className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-sm font-semibold transition-all duration-300 ${mode === m
-                                ? "bg-white text-black shadow-lg"
-                                : "text-white/70 hover:text-white hover:bg-white/10"
-                            }`}
-                    >
-                        {m === "pomodoro"
-                            ? "Tập trung"
-                            : m === "shortBreak"
-                                ? "Nghỉ ngắn"
-                                : m === "longBreak"
-                                    ? "Nghỉ dài"
-                                    : m === "stopwatch"
-                                        ? "Bấm giờ"
-                                        : m === "clock"
-                                            ? "Đồng hồ"
-                                            : m === "dateCountdown"
-                                                ? "Theo ngày"
-                                                : "Hàng ngày"}
-                    </button>
-                ))}
+            {/* Mode Selectors - Absolutely positioned above timer display with hover bridge */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full pb-3 z-30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 -translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto">
+                <div className="flex flex-nowrap whitespace-nowrap sm:space-x-2 space-x-1 p-1 rounded-full bg-white/10 backdrop-blur-md shadow-lg">
+                    {(
+                        [
+                            "pomodoro",
+                            "shortBreak",
+                            "longBreak",
+                            "stopwatch",
+                            "clock",
+                            "dateCountdown",
+                            "dailyCountdown",
+                        ] as TimerMode[]
+                    ).map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => setMode(m)}
+                            className={`px-2 py-1 sm:px-4 sm:py-2 rounded-full text-sm font-semibold transition-all duration-300 ${mode === m
+                                    ? "bg-white text-black shadow-lg"
+                                    : "text-white/70 hover:text-white hover:bg-white/10"
+                                }`}
+                        >
+                            {m === "pomodoro"
+                                ? "Tập trung"
+                                : m === "shortBreak"
+                                    ? "Nghỉ ngắn"
+                                    : m === "longBreak"
+                                        ? "Nghỉ dài"
+                                        : m === "stopwatch"
+                                            ? "Bấm giờ"
+                                            : m === "clock"
+                                                ? "Đồng hồ"
+                                                : m === "dateCountdown"
+                                                    ? "Theo ngày"
+                                                    : "Hàng ngày"}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* Target Date/Time input - HIDDEN by default, only appears on hover */}
+            {/* Target Date/Time input - Seamless hover bridge (pt-3) & focus-within */}
             {isTargetMode && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-4 flex items-center gap-2 rounded-xl bg-black/50 p-2 text-sm backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 pointer-events-none group-hover:pointer-events-auto">
-                    <label className="sr-only" htmlFor="countdown-target">
-                        {mode === "dateCountdown" ? "Mục tiêu ngày giờ" : "Thời gian mục tiêu hàng ngày"}
-                    </label>
-                    <input
-                        id="countdown-target"
-                        type={mode === "dateCountdown" ? "datetime-local" : "time"}
-                        value={mode === "dateCountdown" ? countdownTargets.dateTime : countdownTargets.dailyTime}
-                        onChange={(event) =>
-                            updateTarget(mode === "dateCountdown" ? "dateTime" : "dailyTime", event.target.value)
-                        }
-                        onClick={(e) => {
-                            try {
-                                e.currentTarget.showPicker?.();
-                            } catch {}
-                        }}
-                        className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white outline-none focus:border-white/60 [color-scheme:dark] cursor-pointer"
-                    />
+                <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto">
+                    <div className="flex items-center gap-2 rounded-xl bg-black/60 p-2 text-sm backdrop-blur-md shadow-xl border border-white/10">
+                        <label className="sr-only" htmlFor="countdown-target">
+                            {mode === "dateCountdown" ? "Mục tiêu ngày giờ" : "Thời gian mục tiêu hàng ngày"}
+                        </label>
+                        <input
+                            id="countdown-target"
+                            type={mode === "dateCountdown" ? "datetime-local" : "time"}
+                            value={mode === "dateCountdown" ? countdownTargets.dateTime : countdownTargets.dailyTime}
+                            onChange={(event) =>
+                                updateTarget(mode === "dateCountdown" ? "dateTime" : "dailyTime", event.target.value)
+                            }
+                            onClick={(e) => {
+                                try {
+                                    e.currentTarget.showPicker?.();
+                                } catch {}
+                            }}
+                            className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-white outline-none focus:border-white/60 [color-scheme:dark] cursor-pointer"
+                        />
+                    </div>
                 </div>
             )}
 
-            {/* Pomodoro Focus duration input - HIDDEN by default, only appears on hover */}
+            {/* Pomodoro Focus duration input - Seamless hover bridge (pt-3) & focus-within */}
             {mode === "pomodoro" && !isActive && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-4 flex items-center gap-2 rounded-xl bg-black/50 p-2 text-sm backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 pointer-events-none group-hover:pointer-events-auto">
-                    <label className="sr-only" htmlFor="focus-duration">
-                        Thời gian tập trung
-                    </label>
-                    <input
-                        id="focus-duration"
-                        type="time"
-                        step="1"
-                        value={focusDuration}
-                        onChange={(event) => updateFocusDuration(event.target.value)}
-                        onClick={(e) => {
-                            try {
-                                e.currentTarget.showPicker?.();
-                            } catch {}
-                        }}
-                        aria-label="Thời gian tập trung (hh:mm:ss)"
-                        className="w-32 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-white outline-none focus:border-white/60 [color-scheme:dark] cursor-pointer"
-                    />
+                <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto">
+                    <div className="flex items-center gap-2 rounded-xl bg-black/60 p-2 text-sm backdrop-blur-md shadow-xl border border-white/10">
+                        <label className="sr-only" htmlFor="focus-duration">
+                            Thời gian tập trung
+                        </label>
+                        <input
+                            id="focus-duration"
+                            type="time"
+                            step="1"
+                            value={focusDuration}
+                            onChange={(event) => updateFocusDuration(event.target.value)}
+                            onClick={(e) => {
+                                try {
+                                    e.currentTarget.showPicker?.();
+                                } catch {}
+                            }}
+                            aria-label="Thời gian tập trung (hh:mm:ss)"
+                            className="w-32 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-center text-white outline-none focus:border-white/60 [color-scheme:dark] cursor-pointer"
+                        />
+                    </div>
                 </div>
             )}
 
@@ -303,33 +309,35 @@ export default function Timer({ onClose }: TimerProps) {
                 {mode === "clock" ? formatClock(currentTime) : formatTimer(targetTimeLeft)}
             </div>
 
-            {/* Controls - Absolutely positioned below timer display */}
+            {/* Controls - Absolutely positioned below timer display with hover bridge */}
             {mode !== "clock" && !isTargetMode && (
                 <div
-                    className={`absolute left-1/2 -translate-x-1/2 top-full flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0 ${mode === "pomodoro" && !isActive ? "mt-20" : "mt-4"
+                    className={`absolute left-1/2 -translate-x-1/2 top-full z-30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto ${mode === "pomodoro" && !isActive ? "pt-20" : "pt-4"
                         }`}
                 >
-                    <button
-                        onClick={toggleTimer}
-                        className="bg-white text-black sm:p-6 p-4 rounded-full hover:scale-105 transition-transform shadow-lg active:scale-95"
-                    >
-                        {isActive ? (
-                            <Pause size={32} fill="black" />
-                        ) : (
-                            <Play size={32} fill="black" className="ml-1" />
-                        )}
-                    </button>
+                    <div className="flex items-center space-x-3">
+                        <button
+                            onClick={toggleTimer}
+                            className="bg-white text-black sm:p-6 p-4 rounded-full hover:scale-105 transition-transform shadow-lg active:scale-95"
+                        >
+                            {isActive ? (
+                                <Pause size={32} fill="black" />
+                            ) : (
+                                <Play size={32} fill="black" className="ml-1" />
+                            )}
+                        </button>
 
-                    {(mode === "stopwatch"
-                        ? timeLeft > 0
-                        : timeLeft < TIMER_SETTINGS[mode]) && (
-                            <button
-                                onClick={resetTimer}
-                                className="bg-white/10 text-white sm:p-4 p-3 rounded-full hover:bg-white/20 transition-colors"
-                            >
-                                <RotateCcw size={24} />
-                            </button>
-                        )}
+                        {(mode === "stopwatch"
+                            ? timeLeft > 0
+                            : timeLeft < TIMER_SETTINGS[mode]) && (
+                                <button
+                                    onClick={resetTimer}
+                                    className="bg-white/10 text-white sm:p-4 p-3 rounded-full hover:bg-white/20 transition-colors"
+                                >
+                                    <RotateCcw size={24} />
+                                </button>
+                            )}
+                    </div>
                 </div>
             )}
 
