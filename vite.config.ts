@@ -3,53 +3,56 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig(({ mode }) => {
-  return {
-    base: "./",
-    root: "src",
-    publicDir: "src/assets",
-    build: {
-      outDir: "../",
-      copyPublicDir: true,
-      assetsDir: "public",
-      emptyOutDir: false,
-      rollupOptions: {
-        output: {
-          assetFileNames: "public/assets/[name][extname]",
-          // entryFileNames: "public/[hash].js",
-          manualChunks(id) {
-            // Vendor chunks
-            if (id.includes("node_modules")) {
-              return "vendor";
-            }
+    return {
+        base: "./",
+        root: "src",
+        publicDir: "src/assets",
+        build: {
+            outDir: "../",
+            copyPublicDir: true,
+            assetsDir: "public",
+            emptyOutDir: false,
+            rollupOptions: {
+                output: {
+                    assetFileNames: "public/assets/[name][extname]",
+                    // entryFileNames: "public/[hash].js",
+                    manualChunks(id) {
+                        // Vendor chunks
+                        if (id.includes("node_modules")) {
+                            return "vendor";
+                        }
 
-            for (const folder of [
-              "components",
-              // "assets",
-              "visualizers",
-            ]) {
-              if (id.includes(`/${folder}/`)) {
-                const componentName = id.split(".")?.[0]?.split(`/`)?.at?.(-1);
-                console.log(id, componentName);
-                if (componentName) {
-                  return `${folder}/${componentName.toLowerCase()}`;
-                }
-              }
-            }
+                        for (const folder of [
+                            "components",
+                            // "assets",
+                            "visualizers",
+                        ]) {
+                            if (id.includes(`/${folder}/`)) {
+                                const componentName = id.split(".")?.[0]?.split(`/`)?.at?.(-1);
+                                console.log(id, componentName);
+                                if (componentName) {
+                                    return `${folder}/${componentName.toLowerCase()}`;
+                                }
+                            }
+                        }
 
-            return "default";
-          },
+                        return "default";
+                    },
+                },
+            },
         },
-      },
-    },
-    server: {
-      port: 3000,
-      host: "0.0.0.0",
-    },
-    plugins: [react()],
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "."),
-      },
-    },
-  };
+        server: {
+            port: 3000,
+            host: "0.0.0.0",
+            proxy: {
+                "/api": "http://localhost:8000",
+            },
+        },
+        plugins: [react()],
+        resolve: {
+            alias: {
+                "@": path.resolve(__dirname, "."),
+            },
+        },
+    };
 });

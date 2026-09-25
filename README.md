@@ -115,7 +115,8 @@ A beautiful, feature-rich **Pomodoro Timer** with stunning **Music Visualizer** 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ or Bun
+- PHP 8+ with the JSON and password extensions
+- Node.js 18+ or Bun for building the frontend
 
 ### Installation
 
@@ -129,13 +130,20 @@ npm install
 # or
 bun install
 
-# Start development server
+# Start the PHP API server
+npm run server
+# In another terminal, start the Vite frontend:
 npm run dev
 # or
 bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+The PHP API stores users, sessions, and per-user application data in `data/db.json`.
+Only the login session token is stored in the browser's local storage. For Vite development,
+set `VITE_API_URL=http://localhost:8000` before starting the frontend. On PHP hosting,
+upload `api.php`, `.htaccess`, `data/db.json`, and the built frontend to the same site.
 
 ### Building for Production
 
