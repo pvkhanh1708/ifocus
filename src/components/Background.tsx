@@ -215,7 +215,7 @@ export default function Background({
           playerRef.current.unMute();
         }
       } catch (e) {
-        console.warn("Error changing mute state:", e);
+        console.warn("Lỗi khi thay đổi trạng thái tắt tiếng:", e);
       }
     }
   }, [isMuted, scene.type]);
@@ -248,12 +248,12 @@ export default function Background({
               setInternalShowYoutubeModal(true);
             }
           } catch (e) {
-            console.warn("Error checking player state:", e);
+            console.warn("Lỗi khi kiểm tra trạng thái trình phát:", e);
           }
         }, 500);
       }
     } catch (e) {
-      console.warn("Error checking YouTube player state:", e);
+      console.warn("Lỗi khi kiểm tra trạng thái trình phát YouTube:", e);
     }
   }, []);
 
@@ -281,7 +281,7 @@ export default function Background({
       // Try to start playing
       event.target.playVideo();
     } catch (e) {
-      console.warn("Error in onPlayerReady:", e);
+      console.warn("Lỗi khi trình phát sẵn sàng:", e);
     }
   };
 
@@ -294,18 +294,18 @@ export default function Background({
         setInternalShowYoutubeModal(false);
       }
     } catch (e) {
-      console.warn("Error in onPlayerStateChange:", e);
+      console.warn("Lỗi khi trạng thái trình phát thay đổi:", e);
     }
   };
 
   // Error handler for YouTube player
   const onPlayerError: YouTubeProps["onError"] = (event) => {
-    console.error("YouTube player error:", event.data);
+    console.error("Lỗi trình phát YouTube:", event.data);
     // Don't set youtubeError for recoverable errors (like video unavailable)
     // Only set it for fatal errors that prevent any playback
     if (event.data === 150 || event.data === 101) {
       // Video unavailable or embedding restricted - these are recoverable
-      console.warn("Video may be unavailable or embedding restricted");
+      console.warn("Phim có thể không khả dụng hoặc bị hạn chế nhúng");
     } else {
       setYoutubeError(true);
     }
@@ -393,7 +393,7 @@ export default function Background({
                 internalShowYoutubeModal &&
                 !hasStartedPlayingRef.current && (
                   <div className="absolute top-3 left-3 z-10 px-3 py-1.5 rounded-lg bg-black/60 text-white/90 text-sm">
-                    Click the video to start playback
+                    Nhấn vào phim để bắt đầu phát
                   </div>
                 )}
               <button
@@ -471,7 +471,7 @@ export default function Background({
           {scene.thumbnail && !imageLoaded && (
             <img
               src={scene.thumbnail}
-              alt="background thumbnail"
+              alt="Ảnh thu nhỏ của hình nền"
               className="w-full h-full object-cover blur-sm scale-105"
             />
           )}
@@ -479,7 +479,7 @@ export default function Background({
           {/* Full resolution image - fades in when loaded */}
           <img
             src={scene.url}
-            alt="background"
+            alt="Hình nền"
             loading="eager"
             className={`w-full h-full object-cover transition-opacity duration-700 ${
               imageLoaded ? "opacity-100" : "opacity-0"

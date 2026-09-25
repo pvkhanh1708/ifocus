@@ -47,7 +47,7 @@ export default function SettingsTab() {
         <label className="flex justify-between items-center text-xs text-white/70">
           <span className="flex items-center gap-2">
             <BarChart size={14} />
-            Sync with Visualizer
+            Đồng bộ theo âm thanh
           </span>
           <button
             onClick={() =>
@@ -68,14 +68,14 @@ export default function SettingsTab() {
           </button>
         </label>
         <p className="text-[10px] text-white/30 mt-2">
-          Background will zoom in/out following the audio intensity.
+          Hình nền phóng to hoặc thu nhỏ theo cường độ âm thanh.
         </p>
 
         {syncVisualizerConfig.enabled && (
           <div className="mt-3 pt-3 border-t border-white/10 space-y-3">
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Intensity</span>
+                <span>Cường độ</span>
                 <span>{Math.round(syncVisualizerConfig.intensity * 100)}%</span>
               </label>
               <input
@@ -96,7 +96,7 @@ export default function SettingsTab() {
 
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Smoothing</span>
+                <span>Độ mượt</span>
                 <span>{Math.round(syncVisualizerConfig.speed * 100)}%</span>
               </label>
               <input
@@ -123,7 +123,7 @@ export default function SettingsTab() {
         <label className="flex justify-between text-xs text-white/70 mb-2">
           <span className="flex items-center gap-2">
             <ZoomIn size={14} />
-            Initial Zoom
+            Mức phóng to ban đầu
           </span>
           <span className="text-purple-400">{bgInitialZoom}%</span>
         </label>
@@ -136,7 +136,7 @@ export default function SettingsTab() {
           className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
         />
         <p className="text-[10px] text-white/30 mt-1">
-          Base zoom level for the background (100% = no zoom)
+          Mức phóng to cơ bản của hình nền (100% = kích thước gốc)
         </p>
       </div>
 
@@ -148,7 +148,7 @@ export default function SettingsTab() {
         >
           <span className="flex items-center gap-2">
             <Palette size={14} />
-            Filters
+            Bộ lọc
           </span>
           {filtersExpanded ? (
             <ChevronUp size={16} className="text-white/30" />
@@ -165,13 +165,13 @@ export default function SettingsTab() {
               className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
             >
               <RotateCcw size={14} />
-              Reset All Filters
+              Đặt lại toàn bộ bộ lọc
             </button>
 
             {/* Blur */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Blur</span>
+                <span>Độ mờ</span>
                 <span>{f.blur}px</span>
               </label>
               <input
@@ -187,7 +187,7 @@ export default function SettingsTab() {
             {/* Brightness */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Brightness</span>
+                <span>Độ sáng</span>
                 <span>{f.brightness}%</span>
               </label>
               <input
@@ -205,7 +205,7 @@ export default function SettingsTab() {
             {/* Contrast */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Contrast</span>
+                <span>Độ tương phản</span>
                 <span>{f.contrast}%</span>
               </label>
               <input
@@ -223,7 +223,7 @@ export default function SettingsTab() {
             {/* Grayscale */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Grayscale</span>
+                <span>Sắc xám</span>
                 <span>{f.grayscale}%</span>
               </label>
               <input
@@ -241,7 +241,7 @@ export default function SettingsTab() {
             {/* Hue Rotate */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Hue Rotate</span>
+                <span>Xoay sắc độ</span>
                 <span>{f.hueRotate}°</span>
               </label>
               <input
@@ -259,7 +259,7 @@ export default function SettingsTab() {
             {/* Invert */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Invert</span>
+                <span>Đảo màu</span>
                 <span>{f.invert}%</span>
               </label>
               <input
@@ -275,7 +275,7 @@ export default function SettingsTab() {
             {/* Opacity */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Opacity</span>
+                <span>Độ đục</span>
                 <span>{f.opacity}%</span>
               </label>
               <input
@@ -293,7 +293,7 @@ export default function SettingsTab() {
             {/* Saturate */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Saturate</span>
+                <span>Độ bão hòa</span>
                 <span>{f.saturate}%</span>
               </label>
               <input
@@ -311,7 +311,7 @@ export default function SettingsTab() {
             {/* Sepia */}
             <div>
               <label className="flex justify-between text-[10px] text-white/50 mb-1">
-                <span>Sepia</span>
+                <span>Sắc nâu cổ điển</span>
                 <span>{f.sepia}%</span>
               </label>
               <input

@@ -30,7 +30,7 @@ export default function VideoTab() {
       id: `custom-vid-${Date.now()}`,
       type: isYoutube ? "youtube" : "video",
       url: customVideoUrl,
-      name: "Custom Video",
+      name: "Phim tùy chỉnh",
     });
     setCustomVideoUrl("");
   };
@@ -68,7 +68,7 @@ export default function VideoTab() {
             ) : (
               <Volume2 size={18} className="text-white" />
             )}
-            <span className="text-xs font-medium">Audio</span>
+            <span className="text-xs font-medium">Âm thanh</span>
           </div>
           <div
             className={`text-[10px] px-2 py-0.5 rounded font-bold ${
@@ -77,7 +77,7 @@ export default function VideoTab() {
                 : "bg-white/10 text-white/50"
             }`}
           >
-            {isBgMuted ? "OFF" : "ON"}
+            {isBgMuted ? "TẮT" : "BẬT"}
           </div>
         </button>
 
@@ -87,7 +87,7 @@ export default function VideoTab() {
           className="backdrop-blur-md w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-white/80 hover:text-white"
         >
           <VideoIcon size={18} />
-          <span className="text-xs font-medium">Control Video</span>
+          <span className="text-xs font-medium">Điều khiển phim</span>
         </button>
       </div>
       {/* </div> */}
@@ -97,12 +97,12 @@ export default function VideoTab() {
         {/* Custom Video URL */}
         <div className="p-3 rounded-xl bg-white/5 border border-white/10">
           <label className="text-xs font-bold text-white/50 uppercase mb-2 block">
-            Video URL
+            Đường dẫn phim
           </label>
           <form onSubmit={handleCustomVideoSubmit} className="flex gap-2">
             <input
               type="text"
-              placeholder="https://youtube.com/watch?v=..."
+              placeholder="Dán đường dẫn YouTube hoặc tệp phim"
               value={customVideoUrl}
               onChange={(e) => setCustomVideoUrl(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/50"
@@ -115,7 +115,7 @@ export default function VideoTab() {
             </button>
           </form>
           <p className="text-[10px] text-white/30 mt-1">
-            Supports YouTube links or direct .mp4 URLs.
+            Hỗ trợ đường dẫn YouTube hoặc đường dẫn trực tiếp đến tệp .mp4.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export default function VideoTab() {
           />
           <Upload size={18} className="text-white/50" />
           <span className="text-xs text-white/70 font-medium">
-            Upload from device
+            Tải lên từ thiết bị
           </span>
         </label>
 

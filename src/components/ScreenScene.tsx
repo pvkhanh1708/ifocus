@@ -18,18 +18,22 @@ const SettingsTab = loadable(() => import("./TabSettings"), {
 const Tabs = [
   {
     name: "Color",
+    label: "Màu sắc",
     component: ColorTab,
   },
   {
     name: "Image",
+    label: "Hình ảnh",
     component: ImageTab,
   },
   {
     name: "Video",
+    label: "Phim",
     component: VideoTab,
   },
   {
     name: "Settings",
+    label: "Cài đặt",
     component: SettingsTab,
   },
 ];
@@ -60,7 +64,7 @@ export default function SceneScreen() {
                 : "text-white/50 hover:text-white"
             }`}
           >
-            {tab.name}
+            {tab.label}
           </button>
         ))}
       </div>

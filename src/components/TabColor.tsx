@@ -74,7 +74,7 @@ export default function ColorTab() {
       id: `custom-color-${Date.now()}`,
       type: "color",
       url: customColor,
-      name: "Custom Color",
+      name: "Màu tùy chỉnh",
     });
   };
 
@@ -83,12 +83,12 @@ export default function ColorTab() {
       id: `custom-gradient-${Date.now()}`,
       type: "gradient",
       url: getGradientUrl(),
-      name: "Custom Gradient",
+      name: "Màu chuyển sắc tùy chỉnh",
     });
   };
 
   const handleSaveColor = () => {
-    const name = prompt("Enter a name for this color:");
+    const name = prompt("Nhập tên cho màu này:");
     if (!name) return;
     const newColor: Scene = {
       id: `user-color-${Date.now()}`,
@@ -100,7 +100,7 @@ export default function ColorTab() {
   };
 
   const handleSaveGradient = () => {
-    const name = prompt("Enter a name for this gradient:");
+    const name = prompt("Nhập tên cho màu chuyển sắc này:");
     if (!name) return;
     const newGradient: Scene = {
       id: `user-gradient-${Date.now()}`,
@@ -158,7 +158,7 @@ export default function ColorTab() {
       {/* Solid Colors */}
       <div>
         <h3 className="text-xs font-bold text-white/50 uppercase mb-3">
-          Solid Colors
+          Màu đơn sắc
         </h3>
         <div className="grid grid-cols-4 gap-2">
           {DEFAULT_COLORS.map((scene) => (
@@ -191,7 +191,7 @@ export default function ColorTab() {
       {/* Gradients */}
       <div>
         <h3 className="text-xs font-bold text-white/50 uppercase mb-3">
-          Gradients
+          Màu chuyển sắc
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {DEFAULT_GRADIENTS.map((scene) => (
@@ -225,7 +225,7 @@ export default function ColorTab() {
       <div className="p-3 rounded-xl bg-white/5 border border-white/10">
         <h3 className="text-xs font-bold text-white/50 uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
-          Custom Color
+          Màu tùy chỉnh
         </h3>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -248,14 +248,14 @@ export default function ColorTab() {
           <button
             onClick={handleCustomColorApply}
             className="p-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors"
-            title="Apply"
+            title="Áp dụng"
           >
             <Check size={18} />
           </button>
           <button
             onClick={handleSaveColor}
             className="p-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
-            title="Save to presets"
+            title="Lưu vào bộ mẫu"
           >
             <Save size={18} />
           </button>
@@ -266,7 +266,7 @@ export default function ColorTab() {
       {userColors.length > 0 && (
         <div>
           <h3 className="text-xs font-bold text-white/50 uppercase mb-3">
-            My Saved Colors
+            Màu đã lưu
           </h3>
           <div className="grid grid-cols-4 gap-2">
             {userColors.map((scene) => (
@@ -303,7 +303,7 @@ export default function ColorTab() {
       <div className="p-3 rounded-xl bg-white/5 border border-white/10">
         <h3 className="text-xs font-bold text-white/50 uppercase mb-3 flex items-center gap-2">
           <Palette size={14} />
-          Custom Gradient
+          Màu chuyển sắc tùy chỉnh
         </h3>
         {/* Preview */}
         <div
@@ -357,7 +357,7 @@ export default function ColorTab() {
           onClick={addGradientStop}
           className="w-full py-1.5 mb-3 border border-dashed border-white/20 rounded-lg text-xs text-white/50 hover:text-white hover:border-white/40 transition-colors"
         >
-          + Add Color Stop
+          + Thêm điểm màu
         </button>
         {/* Angle & Apply */}
         <div className="flex items-center gap-3">
@@ -373,14 +373,14 @@ export default function ColorTab() {
           <button
             onClick={handleCustomGradientApply}
             className="p-2 bg-white text-black rounded-lg hover:bg-white/90 transition-colors"
-            title="Apply"
+            title="Áp dụng"
           >
             <Check size={18} />
           </button>
           <button
             onClick={handleSaveGradient}
             className="p-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
-            title="Save to presets"
+            title="Lưu vào bộ mẫu"
           >
             <Save size={18} />
           </button>
@@ -391,7 +391,7 @@ export default function ColorTab() {
       {userGradients.length > 0 && (
         <div>
           <h3 className="text-xs font-bold text-white/50 uppercase mb-3">
-            My Saved Gradients
+            Màu chuyển sắc đã lưu
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {userGradients.map((scene) => (

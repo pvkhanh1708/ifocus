@@ -829,10 +829,10 @@ export default function Visualizer({
               ? "text-green-400 bg-green-500/20 hover:bg-green-500/30"
               : "text-white/80 bg-white/10 hover:bg-white/20"
           }`}
-          title="Performance mode reduces visual effects for better framerate on low-end devices"
+          title="Chế độ hiệu năng giảm hiệu ứng để tăng độ mượt trên thiết bị yếu"
         >
           <Zap size={14} />
-          Performance Mode {performanceMode ? "ON" : "OFF"}
+          Chế độ hiệu năng {performanceMode ? "BẬT" : "TẮT"}
         </button>
 
         {/* Show FPS Toggle */}
@@ -843,12 +843,12 @@ export default function Visualizer({
               ? "text-cyan-400 bg-cyan-500/20 hover:bg-cyan-500/30"
               : "text-white/80 bg-white/10 hover:bg-white/20"
           }`}
-          title="Show FPS counter on the visualizer"
+          title="Hiển thị chỉ số FPS trên màn hình"
         >
-          Show FPS {showFps ? "ON" : "OFF"}
+          Hiện FPS {showFps ? "BẬT" : "TẮT"}
         </button>
 
-        {/* Audio Config Collapsible Section */}
+        {/* Cấu hình âm thanh Collapsible Section */}
         <div className="border-t border-white/10 pt-2">
           <button
             onClick={() => setAudioConfigExpanded(!audioConfigExpanded)}
@@ -871,16 +871,16 @@ export default function Visualizer({
               <button
                 onClick={handleResetConfig}
                 className="w-full px-3 py-1.5 text-xs font-medium text-white/80 bg-white/10 hover:bg-white/20 rounded-md transition-colors cursor-pointer flex items-center justify-center gap-2"
-                title="Reset to defaults"
+                title="Đặt lại về mặc định"
               >
                 <RotateCcw size={14} />
-                Reset to Defaults
+                Đặt lại về mặc định
               </button>
 
               {/* FFT Size - must be power of 2 */}
               <div>
                 <label className="flex justify-between text-xs text-white/70 mb-1">
-                  <span>FFT Size</span>
+                  <span>Kích thước FFT</span>
                 </label>
                 <select
                   value={config.fftSize}
@@ -902,7 +902,7 @@ export default function Visualizer({
               {/* Smoothing Time */}
               <div>
                 <label className="flex justify-between text-xs text-white/70 mb-1">
-                  <span>Smoothing</span>
+                  <span>Độ mượt</span>
                   <span className="text-purple-400">
                     {config.smoothingTimeConstant.toFixed(2)}
                   </span>
@@ -926,7 +926,7 @@ export default function Visualizer({
               {/* Min Decibels */}
               <div>
                 <label className="flex justify-between text-xs text-white/70 mb-1">
-                  <span>Min dB</span>
+                  <span>dB tối thiểu</span>
                   <span className="text-purple-400">{config.minDecibels}</span>
                 </label>
                 <input
@@ -945,7 +945,7 @@ export default function Visualizer({
               {/* Max Decibels */}
               <div>
                 <label className="flex justify-between text-xs text-white/70 mb-1">
-                  <span>Max dB</span>
+                  <span>dB tối đa</span>
                   <span className="text-purple-400">{config.maxDecibels}</span>
                 </label>
                 <input
@@ -964,7 +964,7 @@ export default function Visualizer({
               {/* Freq Start Index */}
               <div>
                 <label className="flex justify-between text-xs text-white/70 mb-1">
-                  <span>Freq Start</span>
+                  <span>Tần số bắt đầu</span>
                   <span className="text-purple-400">
                     {config.freqStartIndex}
                   </span>
@@ -988,7 +988,7 @@ export default function Visualizer({
               {/* Freq Length */}
               <div>
                 <label className="flex justify-between text-xs text-white/70 mb-1">
-                  <span>Freq Count</span>
+                  <span>Số lượng tần số</span>
                   <span className="text-purple-400">{config.freqLength}</span>
                 </label>
                 <input
@@ -1007,7 +1007,7 @@ export default function Visualizer({
               {/* Logo Upload for Trap Nation */}
               <div className="pt-2 border-t border-white/10">
                 <label className="flex justify-between text-xs text-white/70 mb-2">
-                  <span>Center Logo (Trap Nation)</span>
+                  <span>Logo ở giữa (Trap Nation)</span>
                 </label>
                 {logoDataUrl ? (
                   <div className="flex items-center gap-2">
@@ -1091,7 +1091,7 @@ export default function Visualizer({
         />
         <input
           type="text"
-          placeholder="Search modes..."
+          placeholder="Tìm kiếm chế độ..."
           value={modeSearch}
           onChange={(e) => setModeSearch(e.target.value)}
           className="w-full pl-7 pr-3 py-1.5 text-xs bg-white/10 text-white/90 rounded-md border border-white/20 focus:outline-none focus:border-purple-500 placeholder:text-white/40"
@@ -1104,7 +1104,7 @@ export default function Visualizer({
         <>
           <div className="flex items-center gap-2 mt-3 mb-2">
             <div className="h-px flex-1 bg-white/20"></div>
-            <span className="text-xs text-white/50 font-medium">Simple</span>
+            <span className="text-xs text-white/50 font-medium">Đơn giản</span>
             <div className="h-px flex-1 bg-white/20"></div>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -1129,7 +1129,7 @@ export default function Visualizer({
 
       {filteredModes.length === 0 && (
         <div className="text-center text-white/50 text-xs py-4">
-          No modes found
+          Không tìm thấy chế độ nào
         </div>
       )}
     </div>
@@ -1214,7 +1214,7 @@ export default function Visualizer({
                   ? "text-purple-400 bg-purple-500/20 hover:bg-purple-500/30"
                   : "text-white/80 bg-white/10 hover:bg-white/20"
               }`}
-              title="Select visualizer mode"
+              title="Chọn chế độ hiển thị sóng nhạc"
             >
               <Sparkle size={12} />
               <span className="max-w-[80px] truncate">{mode}</span>
@@ -1251,7 +1251,7 @@ export default function Visualizer({
                   ? "text-blue-400 bg-blue-500/20 hover:bg-blue-500/30"
                   : "text-white/80 bg-white/10 hover:bg-white/20"
               }`}
-              title="Audio analyzer settings"
+              title="Cài đặt bộ phân tích âm thanh"
             >
               <Settings size={14} />
             </button>
@@ -1264,7 +1264,7 @@ export default function Visualizer({
                     ? "text-purple-400 bg-purple-500/20 hover:bg-purple-500/30"
                     : "text-white/80 bg-white/10 hover:bg-white/20"
                 }`}
-                title={_isPiPVis ? "Close PiP" : "Open in PiP"}
+                title={_isPiPVis ? "Đóng PiP" : "Mở chế độ PiP"}
               >
                 <PictureInPicture2 size={14} />
               </button>
@@ -1306,7 +1306,7 @@ export default function Visualizer({
             <button
               onClick={handleCloseClick}
               className="p-1.5 text-xs font-medium text-white/80 bg-white/10 hover:bg-red-500/30 hover:text-red-400 rounded-md transition-colors cursor-pointer"
-              title="Close visualizer"
+              title="Đóng trình hiển thị sóng nhạc"
             >
               <X size={14} />
             </button>
@@ -1330,7 +1330,7 @@ export default function Visualizer({
           >
             <div className="space-y-2">
               <div className="text-xs text-white/60 font-medium mb-2">
-                Select Audio Source
+                Chọn nguồn âm thanh
               </div>
 
               {/* Current Source Status */}
@@ -1341,10 +1341,10 @@ export default function Visualizer({
                     {audioSourceType === "tab" && <Monitor size={14} />}
                     {audioSourceType === "file" && <FileAudio size={14} />}
                     {audioSourceType === "mixer" && <Music2 size={14} />}
-                    {audioSourceType === "tab" && "Tab Audio"}
+                    {audioSourceType === "tab" && "Thẻ trình duyệt"}
                     {audioSourceType === "mic" && "Microphone"}
-                    {audioSourceType === "file" && "Audio File"}
-                    {audioSourceType === "mixer" && "In-App Audio"}
+                    {audioSourceType === "file" && "Tệp âm thanh"}
+                    {audioSourceType === "mixer" && "Âm thanh ứng dụng"}
                   </span>
                   <button
                     onClick={handleStopCapture}
@@ -1363,7 +1363,7 @@ export default function Visualizer({
                   className="w-full px-3 py-2 text-xs font-medium text-white/80 bg-white/10 hover:bg-white/20 rounded-md transition-colors flex items-center gap-2"
                 >
                   <Music2 size={14} />
-                  Ambience / Uploaded Media
+                  Âm thanh môi trường / Nhạc tải lên
                 </button>
               )}
 
@@ -1374,7 +1374,7 @@ export default function Visualizer({
                   className="w-full px-3 py-2 text-xs font-medium text-white/80 bg-white/10 hover:bg-white/20 rounded-md transition-colors flex items-center gap-2"
                 >
                   <Monitor size={14} />
-                  Capture Tab Audio
+                  Thu âm thẻ trình duyệt
                 </button>
               )}
 
@@ -1385,7 +1385,7 @@ export default function Visualizer({
                   className="w-full px-3 py-2 text-xs font-medium text-white/80 bg-white/10 hover:bg-white/20 rounded-md transition-colors flex items-center gap-2"
                 >
                   <Mic size={14} />
-                  Use Microphone
+                  Sử dụng Microphone
                 </button>
               )}
 
@@ -1393,7 +1393,7 @@ export default function Visualizer({
               {!isCapturing && (
                 <label className="w-full px-3 py-2 text-xs font-medium text-white/80 bg-white/10 hover:bg-white/20 rounded-md transition-colors flex items-center gap-2 cursor-pointer">
                   <FileAudio size={14} />
-                  Upload Audio/Video File
+                  Tải tệp âm thanh / video lên
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1408,8 +1408,8 @@ export default function Visualizer({
               {!isCapturing && (
                 <p className="text-xs text-white/40 mt-2">
                   {isMobile
-                    ? "Use 'In-App Audio' for sounds from Ambience/Media tabs."
-                    : "Use 'In-App Audio' to visualize sounds from Ambience or Media tabs."}
+                    ? "Sử dụng 'Âm thanh ứng dụng' cho âm thanh từ tab Môi trường / Phương tiện."
+                    : "Sử dụng 'Âm thanh ứng dụng' để hiển thị sóng cho âm thanh từ tab Môi trường hoặc Phương tiện."}
                 </p>
               )}
             </div>

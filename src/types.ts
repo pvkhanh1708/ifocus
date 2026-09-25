@@ -1,102 +1,119 @@
 export type TimerMode =
-  | "pomodoro"
-  | "shortBreak"
-  | "longBreak"
-  | "clock"
-  | "stopwatch";
+    | "pomodoro"
+    | "shortBreak"
+    | "longBreak"
+    | "clock"
+    | "stopwatch"
+    | "dateCountdown"
+    | "dailyCountdown";
 
 export type EffectType =
-  | "none"
-  | "rain"
-  | "heavy-rain"
-  | "snow"
-  | "leaves"
-  | "cherry-blossom"
-  | "fireflies"
-  | "cloud-shadows"
-  | "sun-rays";
+    | "none"
+    | "rain"
+    | "heavy-rain"
+    | "snow"
+    | "leaves"
+    | "cherry-blossom"
+    | "fireflies"
+    | "cloud-shadows"
+    | "sun-rays";
 
 export interface Task {
-  id: string;
-  text: string;
-  completed: boolean;
-  estimatedPomodoros: number;
+    id: string;
+    text: string;
+    completed: boolean;
+    estimatedPomodoros: number;
 }
 
 export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  updatedAt: number;
+    id: string;
+    title: string;
+    content: string;
+    updatedAt: number;
 }
 
+export interface Countdown {
+    id: string;
+    title: string;
+    targetAt: string;
+    type: CountdownType;
+    durationSeconds?: number;
+    startedAt?: number;
+}
+
+export type CountdownType =
+    | "daysSince"
+    | "dailyCountdown"
+    | "hoursUntil"
+    | "duration";
+
 export interface Scene {
-  id: string;
-  type: "image" | "video" | "color" | "gradient" | "youtube";
-  url: string; // URL for image/video/youtube or Hex code for color
-  name: string;
-  thumbnail?: string; // Optional thumbnail URL for lazy loading
+    id: string;
+    type: "image" | "video" | "color" | "gradient" | "youtube";
+    url: string; // URL for image/video/youtube or Hex code for color
+    name: string;
+    thumbnail?: string; // Optional thumbnail URL for lazy loading
 }
 
 export interface SoundTrack {
-  id: string;
-  name: string;
-  emoji: string;
-  url: string | (() => Promise<any>);
-  category?: string | string[];
+    id: string;
+    name: string;
+    emoji: string;
+    url: string | (() => Promise<any>);
+    category?: string | string[];
 }
 
 export interface SoundState {
-  id: string;
-  volume: number;
-  isPlaying: boolean;
+    id: string;
+    volume: number;
+    isPlaying: boolean;
 }
 
 export interface SoundPreset {
-  id: string;
-  name: string;
-  sounds: SoundState[];
+    id: string;
+    name: string;
+    sounds: SoundState[];
 }
 
 export interface BgFilters {
-  blur: number;
-  brightness: number;
-  contrast: number;
-  grayscale: number;
-  hueRotate: number;
-  invert: number;
-  opacity: number;
-  saturate: number;
-  sepia: number;
+    blur: number;
+    brightness: number;
+    contrast: number;
+    grayscale: number;
+    hueRotate: number;
+    invert: number;
+    opacity: number;
+    saturate: number;
+    sepia: number;
 }
 
 export interface SyncVisualizerConfig {
-  enabled: boolean;
-  intensity: number;
-  speed: number;
+    enabled: boolean;
+    intensity: number;
+    speed: number;
 }
 
 export interface AppState {
-  timer: {
-    timeLeft: number;
-    isActive: boolean;
-    mode: TimerMode;
-  };
-  currentScene: Scene;
-  currentEffect: EffectType;
-  sounds: SoundTrack[];
-  youtube: {
-    url: string;
-    isVisible: boolean;
-    volume: number;
-    history: string[];
-  };
+    timer: {
+        timeLeft: number;
+        isActive: boolean;
+        mode: TimerMode;
+    };
+    currentScene: Scene;
+    currentEffect: EffectType;
+    sounds: SoundTrack[];
+    youtube: {
+        url: string;
+        isVisible: boolean;
+        volume: number;
+        history: string[];
+    };
 }
 
 export interface YtMusic {
-  id: string;
-  videoId: string;
-  title: string;
-  thumbnailUrl: string;
-  category: string;
+    id: string;
+    videoId: string;
+    title: string;
+    thumbnailUrl: string;
+    category: string;
 }

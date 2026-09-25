@@ -16,7 +16,7 @@ export default function ImageTab() {
       id: `custom-img-${Date.now()}`,
       type: "image",
       url: customImageUrl,
-      name: "Custom Image",
+      name: "Hình ảnh tùy chỉnh",
     });
     setCustomImageUrl("");
   };
@@ -39,12 +39,12 @@ export default function ImageTab() {
       {/* Custom Image URL */}
       <div className="p-3 rounded-xl bg-white/5 border border-white/10">
         <label className="text-xs font-bold text-white/50 uppercase mb-2 block">
-          Image URL
+          Đường dẫn hình ảnh
         </label>
         <form onSubmit={handleCustomImageSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="https://example.com/image.jpg"
+            placeholder="Dán đường dẫn hình ảnh"
             value={customImageUrl}
             onChange={(e) => setCustomImageUrl(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white/50"
@@ -57,7 +57,7 @@ export default function ImageTab() {
           </button>
         </form>
         <p className="text-[10px] text-white/30 mt-1">
-          Supports direct image URLs (.jpg, .png, .gif, etc.)
+          Hỗ trợ đường dẫn trực tiếp đến ảnh (.jpg, .png, .gif, v.v.).
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default function ImageTab() {
         />
         <Upload size={18} className="text-white/50" />
         <span className="text-xs text-white/70 font-medium">
-          Upload from device
+          Tải lên từ thiết bị
         </span>
       </label>
 
