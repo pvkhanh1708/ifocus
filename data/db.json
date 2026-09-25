@@ -1,0 +1,92 @@
+{
+    "users": [
+        {
+            "id": "85b4e016bd5587a5e1883e48faf18091",
+            "username": "pvkhanh98",
+            "passwordHash": "$2y$10$zAH4an9MdmDJhJ0Zq1Ze3.xYXcAXhGBfmOHNys7rXPiGwwSWZFyBy",
+            "data": {
+                "currentScene": {
+                    "id": "autumn-road",
+                    "type": "image",
+                    "url": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2560&auto=format&fit=crop",
+                    "thumbnail": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=150&auto=format&fit=crop",
+                    "name": "Con đường mùa thu"
+                },
+                "currentEffect": "none",
+                "bgInitialZoom": 100,
+                "syncVisualizerConfig": {
+                    "enabled": true,
+                    "intensity": 0.5,
+                    "speed": 0.5
+                },
+                "countdowns": [
+                    {
+                        "id": "1790324248896",
+                        "title": "Về",
+                        "targetAt": "18:00",
+                        "type": "dailyCountdown"
+                    },
+                    {
+                        "id": "1790324319614",
+                        "title": "Mun X Bi",
+                        "targetAt": "2026-08-08",
+                        "type": "daysSince"
+                    },
+                    {
+                        "id": "1790324504075",
+                        "title": "💖",
+                        "targetAt": "2020-10-31",
+                        "type": "daysSince"
+                    }
+                ],
+                "timerMode": "dailyCountdown",
+                "bgFilters": {
+                    "blur": 0,
+                    "brightness": 100,
+                    "contrast": 100,
+                    "grayscale": 0,
+                    "hueRotate": 0,
+                    "invert": 0,
+                    "opacity": 100,
+                    "saturate": 100,
+                    "sepia": 0
+                },
+                "tasks": [
+                    {
+                        "id": "1790328041581",
+                        "text": "546456",
+                        "completed": false,
+                        "estimatedPomodoros": 1
+                    },
+                    {
+                        "id": "1790328043413",
+                        "text": "tryủtut",
+                        "completed": false,
+                        "estimatedPomodoros": 1
+                    }
+                ],
+                "zen_timer_states": {
+                    "pomodoro": 1500,
+                    "shortBreak": 300,
+                    "longBreak": 900,
+                    "clock": 0,
+                    "stopwatch": 0,
+                    "dateCountdown": 0,
+                    "dailyCountdown": 0
+                }
+            }
+        }
+    ],
+    "sessions": [
+        {
+            "token": "18a06c0fc4c9b594aea31d198afc92b82902f49152971934708a5d6269662b6b",
+            "userId": "f57d07c54b8b137b6becc9aadcc9abe3",
+            "expiresAt": 1792912432340
+        },
+        {
+            "token": "400b2d0c1e9ea531623607caa0c496ed94cc367ee34598c6bd448a75447d5b05",
+            "userId": "85b4e016bd5587a5e1883e48faf18091",
+            "expiresAt": 1792920015000
+        }
+    ]
+}
