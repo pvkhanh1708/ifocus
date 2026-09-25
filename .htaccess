@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Protect data folder
+RewriteRule ^data/ - [F,L]
+
+# Route API requests to api.php
+RewriteRule ^api/(.*)$ api.php [L,QSA]
