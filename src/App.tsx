@@ -29,6 +29,7 @@ import { useAppStore } from "./stores/useAppStore";
 import { useSyncStatus } from "./stores/syncStatus";
 import { ApiError, withRetry } from "./utils/api";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import ViewportDebug from "./components/ViewportDebug";
 
 // screens
 const EffectsScreen = loadable(() => import("./components/ScreenEffects"), {
@@ -215,7 +216,7 @@ function LoadErrorScreen({
     onLogout: () => void;
 }) {
     return (
-        <main className="fixed inset-x-0 top-0 h-[var(--app-height,100%)] flex flex-col items-center overflow-y-auto bg-neutral-950 px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-white">
+        <main className="flex min-h-[var(--app-height,100dvh)] flex-col items-center bg-neutral-950 px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-white">
             <div className="my-auto w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 text-center shadow-2xl">
                 <h1 className="text-lg font-semibold">Không tải được dữ liệu</h1>
                 <p className="mt-2 text-sm text-white/60">{message}</p>
@@ -304,6 +305,18 @@ function AppContent({
     // Side panel width on desktop, resizable by dragging its left edge (saved per account).
     const [panelWidth, setPanelWidth] = useLocalStorage<number>("panelWidth", PANEL_DEFAULT_WIDTH);
     const layoutRef = useRef<HTMLDivElement>(null);
+
+    // Hidden screen diagnostics: tap the logo 5 times within 2 seconds.
+    const [showViewportDebug, setShowViewportDebug] = useState(false);
+    const logoTapsRef = useRef<number[]>([]);
+    const handleLogoTap = () => {
+        const now = performance.now();
+        logoTapsRef.current = [...logoTapsRef.current.filter((t) => now - t < 2000), now];
+        if (logoTapsRef.current.length >= 5) {
+            logoTapsRef.current = [];
+            setShowViewportDebug(true);
+        }
+    };
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isPiPWebsite, setIsPiPWebsite] = useState(false);
     const pipWindowRef = useRef<Window | null>(null);
@@ -418,7 +431,7 @@ function AppContent({
     return (
         <div
             ref={layoutRef}
-            className="pip-capture-root fixed inset-x-0 top-0 h-[var(--app-height,100%)] overflow-hidden font-sans"
+            className="pip-capture-root relative w-full h-[var(--app-height,100dvh)] overflow-hidden font-sans"
             // Shared by the side panel (its width) and the main layer (its right
             // padding), so the timer stays centred in the space left visible.
             style={{ ["--panel-width" as string]: `${clampPanelWidth(panelWidth)}px` }}
@@ -443,6 +456,7 @@ function AppContent({
                 <div className="flex justify-between items-center p-3 pt-[max(0.75rem,calc(var(--safe-top)+0.25rem))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pointer-events-auto">
                     <div
                         className="flex items-center gap-3 cursor-pointer hover:bg-white/10 rounded-lg p-2 transition-colors"
+                        onClick={handleLogoTap}
                     >
                         <img
                             src="/icons/icon-192.png"
@@ -600,6 +614,8 @@ function AppContent({
                     </div>
                 </div>
             </div>
+
+            {showViewportDebug && <ViewportDebug onClose={() => setShowViewportDebug(false)} />}
 
             {/* Render PiP content using Portal when PiP is active */}
             {isPiPWebsite &&

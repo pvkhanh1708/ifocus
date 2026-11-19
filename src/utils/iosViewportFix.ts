@@ -8,10 +8,11 @@
  * bottom:0 then stop one status-bar height short, leaving a dark strip at the
  * bottom.
  *
- * Detect exactly that case — viewport height + top safe-area inset equals the
- * screen height — and expose the corrected height as --app-height. In every
- * other case (browser tab, Android, desktop, apps without the bug) the
- * variable is not set and layouts fall back to 100%.
+ * Detect that case — standalone iOS, a top safe-area inset (status bar drawn
+ * over the page) and a viewport shorter than the screen — and expose the
+ * corrected height as --app-height. In every other case (browser tab,
+ * Android, desktop, apps without the bug) the variable is not set and layouts
+ * fall back to 100dvh.
  */
 
 const isIOS = () => typeof navigator !== "undefined" && /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -39,12 +40,17 @@ const apply = () => {
         ? Math.max(window.screen.width, window.screen.height)
         : Math.min(window.screen.width, window.screen.height);
 
-    // Buggy case: the page is short of the physical screen by exactly the inset.
-    const short = inset > 0 && Math.abs(viewport + inset - screenHeight) <= 2;
+    // Buggy case: the page is drawn from under the status bar (inset > 0) but
+    // the viewport is shorter than the screen. Extend it by what is missing,
+    // never past the physical screen. If iOS ever sizes it correctly
+    // (viewport == screen) nothing changes.
+    const missing = Math.min(inset, screenHeight - viewport);
+    const short = inset > 0 && missing > 1;
 
     if (short) {
-        root.style.setProperty("--app-height", `${screenHeight}px`);
-        root.dataset.iosViewportFix = `${viewport}+${inset}=${screenHeight}`;
+        const height = viewport + missing;
+        root.style.setProperty("--app-height", `${height}px`);
+        root.dataset.iosViewportFix = `${viewport}+${missing}=${height} (screen ${screenHeight}, inset ${inset})`;
     } else {
         root.style.removeProperty("--app-height");
         delete root.dataset.iosViewportFix;
