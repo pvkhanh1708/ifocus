@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     apiRequest,
     clearSession,
     getSession,
+    SESSION_EXPIRED_EVENT,
     setSession,
     type Session,
 } from "../utils/api";
@@ -10,6 +11,17 @@ import {
 export function useAuth() {
     const [session, setSessionState] = useState<Session | null>(getSession);
     const [isLoading, setIsLoading] = useState(false);
+    const [notice, setNotice] = useState<string | null>(null);
+
+    // The server rejected our token: show the login screen with an explanation.
+    useEffect(() => {
+        const onExpired = () => {
+            setSessionState(null);
+            setNotice("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        };
+        window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+        return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    }, []);
 
     const authenticate = async (path: string, username: string, password: string) => {
         setIsLoading(true);
@@ -20,6 +32,7 @@ export function useAuth() {
             });
             setSession(result);
             setSessionState(result);
+            setNotice(null);
             return result;
         } finally {
             setIsLoading(false);
@@ -40,5 +53,5 @@ export function useAuth() {
         }
     };
 
-    return { session, isLoading, login, register, logout };
+    return { session, isLoading, notice, login, register, logout };
 }

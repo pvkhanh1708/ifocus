@@ -75,13 +75,13 @@ class ApiTest extends TestCase
         $token = $this->register()['token'];
         $headers = $this->auth($token);
 
-        $this->patchJson('/api/data', ['key' => 'tasks', 'value' => [['id' => '1', 'text' => 'Việc 1']]], $headers)->assertOk();
+        $this->patchJson('/api/data', ['key' => 'youtubeHistory', 'value' => [['id' => '1', 'text' => 'Bài 1']]], $headers)->assertOk();
         $this->patchJson('/api/data', ['key' => 'currentEffect', 'value' => 'rain'], $headers)->assertOk();
         $this->patchJson('/api/data', ['key' => 'currentEffect', 'value' => 'snow'], $headers)->assertOk();
         $this->patchJson('/api/data', ['key' => 'cleared', 'value' => null], $headers)->assertOk();
 
         $this->getJson('/api/data', $headers)->assertOk()->assertExactJson(['data' => [
-            'tasks' => [['id' => '1', 'text' => 'Việc 1']],
+            'youtubeHistory' => [['id' => '1', 'text' => 'Bài 1']],
             'currentEffect' => 'snow',
             'cleared' => null,
         ]]);
@@ -103,7 +103,7 @@ class ApiTest extends TestCase
         $a = $this->auth($this->register('alice')['token']);
         $b = $this->auth($this->register('bob')['token']);
 
-        $this->patchJson('/api/data', ['key' => 'notes', 'value' => 'bí mật'], $a)->assertOk();
+        $this->patchJson('/api/data', ['key' => 'zen_yt_url', 'value' => 'bí mật'], $a)->assertOk();
 
         $this->getJson('/api/data', $b)->assertExactJson(['data' => []]);
     }

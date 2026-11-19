@@ -429,7 +429,7 @@ export default function MediaTab() {
                     e.stopPropagation();
                     removeFromHistory(url);
                   }}
-                  className="p-1 opacity-0 group-hover:opacity-100 text-white/50 hover:text-white hover:bg-white/10 rounded transition-all shrink-0"
+                  className="p-1 opacity-0 touch-show group-hover:opacity-100 text-white/50 hover:text-white hover:bg-white/10 rounded transition-all shrink-0"
                   title="Remove from history"
                 >
                   <X size={14} />

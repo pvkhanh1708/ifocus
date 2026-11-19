@@ -13,3 +13,13 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// PWA: installable app + offline UI shell. Production builds only, so the dev
+// server is never served stale files. Needs HTTPS (or localhost).
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .catch((error) => console.warn("Không đăng ký được service worker:", error));
+  });
+}

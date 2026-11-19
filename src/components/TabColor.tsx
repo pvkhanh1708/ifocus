@@ -286,7 +286,7 @@ export default function ColorTab() {
                 </button>
                 <button
                   onClick={() => handleDeleteUserColor(scene.id)}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 touch-show group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 size={10} />
                 </button>
@@ -411,7 +411,7 @@ export default function ColorTab() {
                 </button>
                 <button
                   onClick={() => handleDeleteUserGradient(scene.id)}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 touch-show group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 size={10} />
                 </button>

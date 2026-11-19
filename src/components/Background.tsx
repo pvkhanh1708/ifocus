@@ -127,11 +127,20 @@ export default function Background({
     }
 
     let currentZoom = baseZoom;
+    // Last value written per element (browsers normalise style.transform on
+    // read, so we remember our own string instead of reading it back).
+    const written = new WeakMap<HTMLElement, string>();
 
     const updateZoom = () => {
+      // Only write when the rounded value changes: once the zoom settles (e.g.
+      // no audio playing) we stop forcing a style write every frame. Tracking
+      // per element also covers a video container that mounts later.
       const applyTransform = (element: HTMLDivElement | null) => {
         if (!element) return;
-        element.style.transform = `scale(${currentZoom})`;
+        const transform = `scale(${currentZoom.toFixed(4)})`;
+        if (written.get(element) === transform) return;
+        written.set(element, transform);
+        element.style.transform = transform;
       };
 
       if (isAudioCaptureActive()) {

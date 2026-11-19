@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
 }
@@ -78,4 +82,237 @@ body {
   -webkit-font-smoothing: antialiased;
   paint-order: stroke;
   /* -webkit-text-stroke: 1px currentcolor; */
+}
+
+/* ---------------------------------------------------------------------------
+   Note editor (TipTap). Tailwind's preflight resets lists/headings, so the
+   rich-text elements are styled here for the dark glass panels.
+   --------------------------------------------------------------------------- */
+.note-editor > * + * {
+  margin-top: 0.5em;
+}
+.note-editor h1 {
+  font-size: 1.35em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-top: 0.9em;
+}
+.note-editor h2 {
+  font-size: 1.15em;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-top: 0.8em;
+}
+.note-editor h3 {
+  font-size: 1em;
+  font-weight: 600;
+  margin-top: 0.7em;
+}
+.note-editor > :first-child {
+  margin-top: 0;
+}
+.note-editor strong {
+  font-weight: 700;
+  color: #fff;
+}
+.note-editor a {
+  color: #93c5fd;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Bulleted and numbered lists */
+.note-editor ul,
+.note-editor ol {
+  padding-left: 1.4em;
+}
+.note-editor ul {
+  list-style: disc;
+}
+.note-editor ol {
+  list-style: decimal;
+}
+.note-editor ul ul {
+  list-style: circle;
+}
+.note-editor ol ol {
+  list-style: lower-alpha;
+}
+.note-editor li > p {
+  margin: 0;
+}
+.note-editor li + li {
+  margin-top: 0.2em;
+}
+.note-editor li::marker {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Checklists */
+.note-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.note-editor ul[data-type="taskList"] ul[data-type="taskList"] {
+  padding-left: 1.6em;
+}
+.note-editor ul[data-type="taskList"] > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
+}
+.note-editor ul[data-type="taskList"] > li > label {
+  flex: none;
+  margin-top: 0.2em;
+  user-select: none;
+  cursor: pointer;
+}
+.note-editor ul[data-type="taskList"] > li > div {
+  flex: 1;
+  min-width: 0;
+}
+.note-editor ul[data-type="taskList"] > li input[type="checkbox"] {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  width: 1.05em;
+  height: 1.05em;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 0.3em;
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms;
+}
+.note-editor ul[data-type="taskList"] > li input[type="checkbox"]:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+.note-editor ul[data-type="taskList"] > li input[type="checkbox"]::after {
+  content: "";
+  width: 0.55em;
+  height: 0.3em;
+  border-left: 2px solid #000;
+  border-bottom: 2px solid #000;
+  transform: translateY(-0.05em) rotate(-45deg) scale(0);
+  transition: transform 120ms ease-out;
+}
+.note-editor ul[data-type="taskList"] > li input[type="checkbox"]:checked {
+  background: #6ee7b7;
+  border-color: #6ee7b7;
+}
+.note-editor ul[data-type="taskList"] > li input[type="checkbox"]:checked::after {
+  transform: translateY(-0.05em) rotate(-45deg) scale(1);
+}
+.note-editor ul[data-type="taskList"] > li input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+.note-editor ul[data-type="taskList"] > li[data-checked="true"] > div > p {
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: line-through;
+}
+
+/* Quotes, code, rules */
+.note-editor blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  padding-left: 0.9em;
+  color: rgba(255, 255, 255, 0.7);
+}
+.note-editor code {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.3em;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.note-editor pre {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.6em;
+  padding: 0.75em 0.9em;
+  overflow-x: auto;
+}
+.note-editor pre code {
+  background: none;
+  padding: 0;
+}
+.note-editor hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 1em 0;
+}
+
+/* Placeholder (TipTap marks the empty first node) */
+.note-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Mobile / iOS PWA
+   --------------------------------------------------------------------------- */
+html {
+  /* Same colour as the app icon: no white flash behind the app or on bounce. */
+  background: #09101e;
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+html,
+body {
+  overscroll-behavior: none;
+}
+body {
+  -webkit-tap-highlight-color: transparent;
+  /* No double-tap-to-zoom delay on buttons. */
+  touch-action: manipulation;
+}
+button,
+[role="button"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Phones: the side panel covers the whole screen, so make it nearly opaque
+   (the timer and header behind it would otherwise show through). */
+@media (max-width: 639px) {
+  .glass-panel {
+    background: rgba(12, 16, 26, 0.97);
+  }
+}
+
+@media (hover: none) {
+  /* Actions that desktop shows on hover (delete buttons...) are always
+     visible on touch screens. */
+  .touch-show {
+    opacity: 1;
+  }
+
+  /* Timer: tap it to show its controls (state handled in Timer.tsx). */
+  .tap-reveal {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .tap-reveal.is-revealed .group-hover\:opacity-100 {
+    opacity: 1;
+  }
+  .tap-reveal.is-revealed .group-hover\:pointer-events-auto {
+    pointer-events: auto;
+  }
+  .tap-reveal.is-revealed .group-hover\:translate-y-0 {
+    --tw-translate-y: 0px;
+  }
+}
+
+/* iOS zooms the page when focusing a field whose text is under 16px, so small
+   fields (text-xs / text-sm) are bumped to 16px on touch devices. Fields that
+   are already larger (e.g. the note title) keep their size. !important is
+   needed to beat Tailwind's text-* utilities. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl),
+  textarea:not(.text-lg):not(.text-xl):not(.text-2xl),
+  select {
+    font-size: 16px !important;
+  }
 }

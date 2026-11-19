@@ -3,18 +3,28 @@
 namespace App\Console\Commands;
 
 use App\Models\ApiToken;
-use App\Models\UserData;
+use App\Models\Countdown;
+use App\Models\Note;
+use App\Models\Task;
 use App\Models\User;
+use App\Models\UserData;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-#[Signature('ifocus:import-json {path=data/db.json: Đường dẫn tới file db.json cũ}')]
+#[Signature('ifocus:import-json {path=data/db.json : Đường dẫn tới file db.json cũ}')]
 #[Description('Import users, settings and sessions from the old data/db.json into MySQL (safe to re-run)')]
 class ImportJsonDatabase extends Command
 {
+    /** Legacy data keys that are imported into their own tables. */
+    private const LISTS = [
+        'tasks' => Task::class,
+        'notes' => Note::class,
+        'countdowns' => Countdown::class,
+    ];
+
     public function handle(): int
     {
         $path = $this->argument('path');
@@ -30,7 +40,7 @@ class ImportJsonDatabase extends Command
 
         $users = $db->users ?? [];
         $sessions = $db->sessions ?? [];
-        $stats = ['users' => 0, 'keys' => 0, 'tokens' => 0, 'skipped' => 0];
+        $stats = ['users' => 0, 'keys' => 0, 'items' => 0, 'tokens' => 0, 'skipped' => 0];
 
         DB::transaction(function () use ($users, $sessions, &$stats) {
             foreach ($users as $row) {
@@ -56,8 +66,14 @@ class ImportJsonDatabase extends Command
                 $stats['users']++;
 
                 foreach ((array) ($row->data ?? []) as $key => $value) {
-                    UserData::put($user, (string) $key, $value);
-                    $stats['keys']++;
+                    $key = (string) $key;
+
+                    if (isset(self::LISTS[$key])) {
+                        $stats['items'] += is_array($value) ? self::LISTS[$key]::importLegacy($id, $value) : 0;
+                    } else {
+                        UserData::put($user, $key, $value);
+                        $stats['keys']++;
+                    }
                 }
             }
 
@@ -79,7 +95,7 @@ class ImportJsonDatabase extends Command
             }
         });
 
-        $this->info("Đã import {$stats['users']} user, {$stats['keys']} khóa dữ liệu, {$stats['tokens']} phiên đăng nhập.");
+        $this->info("Đã import {$stats['users']} user, {$stats['keys']} setting, {$stats['items']} task/note/countdown, {$stats['tokens']} phiên đăng nhập.");
 
         if ($stats['skipped'] > 0) {
             $this->warn("Bỏ qua {$stats['skipped']} user không hợp lệ.");

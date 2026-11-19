@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Play, Pause, RotateCcw, X } from "lucide-react";
 import { TIMER_SETTINGS } from "../constants";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useNow } from "../hooks/useNow";
+
+/** Long enough that a running timer (one change per second) is not saved every tick. */
+const TIMER_SAVE_DELAY_MS = 3000;
 import type { TimerMode } from "../types";
 import { useTimerMode, useSetTimerMode } from "../stores/useAppStore";
 
@@ -36,7 +40,9 @@ export default function Timer({ onClose }: TimerProps) {
     const mode = useTimerMode();
     const setMode = useSetTimerMode();
 
-    // Store timeLeft for each mode separately (keeping useLocalStorage for timer states as it's timer-specific)
+    // Time left per mode. It changes every second while running, so it is saved
+    // only once it settles (pause/reset) or when the page is hidden, instead of
+    // one request per second.
     const [timerStates, setTimerStates] = useLocalStorage<TimerStates>(
         "zen_timer_states",
         {
@@ -47,7 +53,8 @@ export default function Timer({ onClose }: TimerProps) {
             stopwatch: TIMER_SETTINGS.stopwatch,
             dateCountdown: TIMER_SETTINGS.dateCountdown,
             dailyCountdown: TIMER_SETTINGS.dailyCountdown,
-        }
+        },
+        TIMER_SAVE_DELAY_MS
     );
 
     const [countdownTargets, setCountdownTargets] = useLocalStorage<CountdownTargets>(
@@ -56,7 +63,12 @@ export default function Timer({ onClose }: TimerProps) {
     );
 
     const [isActive, setIsActive] = useState(false);
-    const [currentTime, setCurrentTime] = useState(new Date());
+
+    const isTargetMode = mode === "dateCountdown" || mode === "dailyCountdown";
+    // Clock shows hh:mm → one render per minute. Target countdowns need seconds.
+    // Other modes don't use wall-clock time (hourly ticker = effectively idle).
+    const now = useNow(isTargetMode ? 1000 : mode === "clock" ? 60_000 : 3_600_000);
+    const currentTime = new Date(now);
     const [focusDuration, setFocusDuration] = useState(() => {
         const seconds = timerStates.pomodoro;
         const hours = Math.floor(seconds / 3600);
@@ -70,60 +82,87 @@ export default function Timer({ onClose }: TimerProps) {
     // Get current mode's time
     const timeLeft = timerStates[mode];
 
-    // Helper to update time for current mode
-    const setTimeLeft = (value: number | ((prev: number) => number)) => {
-        setTimerStates((prev) => ({
-            ...prev,
-            [mode]: typeof value === "function" ? value(prev[mode]) : value,
-        }));
-    };
-
-    const isTargetMode = mode === "dateCountdown" || mode === "dailyCountdown";
-
-    useEffect(() => {
-        if (mode === "clock" || isTargetMode) {
-            const interval = setInterval(() => {
-                setCurrentTime(new Date());
-            }, 1000);
-            return () => clearInterval(interval);
-        }
-    }, [mode, isTargetMode]);
-
     // Stop timer when switching modes
     useEffect(() => {
         setIsActive(false);
     }, [mode]);
 
+    // Touch screens: tap the timer to show/hide its controls (no hover there).
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [touchRevealed, setTouchRevealed] = useState(false);
+    const handleTouchReveal = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (event.pointerType === "mouse") return;
+        // Taps on the controls themselves keep them open.
+        if ((event.target as HTMLElement).closest("button, input, select, label")) return;
+        setTouchRevealed((revealed) => !revealed);
+    };
     useEffect(() => {
-        let interval: number | null = null;
-        if (isTargetMode) {
-            return () => {
-                if (interval) window.clearInterval(interval);
-            };
-        }
-        if (mode === "stopwatch" && isActive) {
-            // Stopwatch counts up
-            interval = window.setInterval(() => {
-                setTimeLeft((time) => time + 1);
-            }, 1000);
-        } else if (
-            mode !== "clock" &&
-            mode !== "stopwatch" &&
-            isActive &&
-            timeLeft > 0
-        ) {
-            // Regular timer counts down
-            interval = window.setInterval(() => {
-                setTimeLeft((time) => time - 1);
-            }, 1000);
-        } else if (mode !== "stopwatch" && timeLeft === 0) {
-            setIsActive(false);
-            // Play a bell sound or notification here if implemented
-        }
-        return () => {
-            if (interval) window.clearInterval(interval);
+        if (!touchRevealed) return;
+        const hideOnOutsideTap = (event: PointerEvent) => {
+            if (!rootRef.current?.contains(event.target as Node)) setTouchRevealed(false);
         };
-    }, [isActive, timeLeft, mode, isTargetMode]);
+        document.addEventListener("pointerdown", hideOnOutsideTap);
+        return () => document.removeEventListener("pointerdown", hideOnOutsideTap);
+    }, [touchRevealed]);
+
+    // Keep the screen on while a timer runs (Screen Wake Lock, iOS 16.4+ /
+    // Android). Re-acquired when the app comes back to the foreground.
+    useEffect(() => {
+        if (!isActive || !("wakeLock" in navigator)) return;
+        let lock: WakeLockSentinel | null = null;
+        let cancelled = false;
+        const acquire = async () => {
+            try {
+                const sentinel = await navigator.wakeLock.request("screen");
+                if (cancelled) sentinel.release();
+                else lock = sentinel;
+            } catch {
+                // Denied (e.g. low battery mode): the timer still works.
+            }
+        };
+        const onVisible = () => document.visibilityState === "visible" && acquire();
+        acquire();
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+            cancelled = true;
+            document.removeEventListener("visibilitychange", onVisible);
+            lock?.release();
+        };
+    }, [isActive]);
+
+    // Running pomodoro / break / stopwatch. The value is derived from the start
+    // timestamp rather than decremented per tick, so it stays exact even when
+    // the browser throttles timers in a background tab.
+    useEffect(() => {
+        if (!isActive || mode === "clock" || isTargetMode) return;
+
+        const startedAt = Date.now();
+        const startValue = timerStates[mode];
+        if (mode !== "stopwatch" && startValue <= 0) {
+            setIsActive(false);
+            return;
+        }
+
+        const tick = () => {
+            const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+            const next =
+                mode === "stopwatch" ? startValue + elapsed : Math.max(0, startValue - elapsed);
+
+            // Returning `prev` when unchanged avoids a re-render.
+            setTimerStates((prev) => (prev[mode] === next ? prev : { ...prev, [mode]: next }));
+
+            if (mode !== "stopwatch" && next === 0) {
+                setIsActive(false);
+                // Play a bell sound or notification here if implemented
+            }
+        };
+
+        // Check 4×/s so the display flips right on the second; state only
+        // changes once per second.
+        const interval = window.setInterval(tick, 250);
+        return () => window.clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- timerStates is read once at start on purpose
+    }, [isActive, mode, isTargetMode]);
 
     const toggleTimer = () => setIsActive(!isActive);
     const resetTimer = () => {
@@ -213,10 +252,18 @@ export default function Timer({ onClose }: TimerProps) {
     }, [timeLeft, targetTimeLeft, mode]);
 
     return (
-        <div className="group relative flex items-center justify-center p-8 transition-all duration-500 ease-in-out text-white max-w-md mx-auto hover:bg-black/40 hover:backdrop-blur-md rounded-3xl font-sans">
+        <div
+            ref={rootRef}
+            onPointerUp={handleTouchReveal}
+            // On touch screens (no hover) the controls are shown by tapping the
+            // timer and hidden by tapping elsewhere (see .tap-reveal in style.css).
+            className={`tap-reveal ${touchRevealed ? "is-revealed bg-black/40 backdrop-blur-md" : ""} group relative flex items-center justify-center p-8 transition-all duration-500 ease-in-out text-white max-w-md mx-auto hover:bg-black/40 hover:backdrop-blur-md rounded-3xl font-sans`}
+        >
             {/* Mode Selectors - Absolutely positioned above timer display with hover bridge */}
             <div className="absolute left-1/2 -translate-x-1/2 bottom-full pb-3 z-30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-300 -translate-y-2 group-hover:translate-y-0 group-focus-within:translate-y-0 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto">
-                <div className="flex flex-nowrap whitespace-nowrap sm:space-x-2 space-x-1 p-1 rounded-full bg-white/10 backdrop-blur-md shadow-lg">
+                {/* Phones: wraps onto two centred rows inside the screen width
+                    instead of overflowing it; one pill row from sm up. */}
+                <div className="flex w-[min(calc(100vw-1.5rem),24rem)] flex-wrap justify-center gap-1 whitespace-nowrap rounded-2xl bg-white/10 p-1 shadow-lg backdrop-blur-md sm:w-auto sm:flex-nowrap sm:gap-2 sm:rounded-full">
                     {(
                         [
                             "pomodoro",

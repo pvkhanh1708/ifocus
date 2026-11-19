@@ -398,7 +398,7 @@ export default function AmbienceTab() {
                 </span>
                 <X
                   size={12}
-                  className="opacity-0 group-hover:opacity-100 text-white/60 hover:text-white transition-opacity -mr-1"
+                  className="opacity-0 touch-show group-hover:opacity-100 text-white/60 hover:text-white transition-opacity -mr-1"
                 />
               </span>
             ))}
@@ -546,7 +546,7 @@ export default function AmbienceTab() {
                     e.stopPropagation();
                     deletePreset(preset.id);
                   }}
-                  className="p-1 opacity-0 group-hover:opacity-100 text-white/40 hover:text-red-400 transition-all"
+                  className="p-1 opacity-0 touch-show group-hover:opacity-100 text-white/40 hover:text-red-400 transition-all"
                 >
                   <Trash2 size={14} />
                 </button>

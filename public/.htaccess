@@ -23,3 +23,24 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ---------------------------------------------------------------------------
+# Performance (iFocus)
+# ---------------------------------------------------------------------------
+
+# Compress text responses (JS, CSS, HTML, JSON API, SVG).
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Built files have a content hash in their name: cache them for a year.
+    <If "%{REQUEST_URI} =~ m#^/static/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+    # The SPA shell, service worker and PWA manifest must always be revalidated
+    # so new builds are picked up.
+    <FilesMatch "^(index\.html|sw\.js|manifest\.json)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>

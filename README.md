@@ -142,8 +142,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Users, login tokens and per-user settings are stored in MySQL (`users`, `api_tokens`,
-`user_data` — one row per setting key). Only the login token is kept in the browser.
+Data is stored in MySQL: `users`, `api_tokens`, `tasks`, `notes`, `countdowns` (one row per
+item) and `user_data` (other UI settings, one row per key). Only the login token is kept in
+the browser.
 
 #### Migrating from the old `data/db.json`
 
@@ -159,7 +160,14 @@ php artisan ifocus:import-json /path/to/db.json   # safe to re-run
 | POST | `/api/auth/login` | – | `{ username, password }` |
 | POST | `/api/auth/logout` | Bearer | – |
 | GET | `/api/data` | Bearer | – |
-| PATCH | `/api/data` | Bearer | `{ key, value }` |
+| PATCH | `/api/data` | Bearer | `{ key, value }` (settings only) |
+| GET | `/api/{list}` | Bearer | – |
+| POST | `/api/{list}` | Bearer | item incl. client `id` (idempotent) |
+| PATCH | `/api/{list}/{id}` | Bearer | changed fields |
+| DELETE | `/api/{list}/{id}` | Bearer | – |
+| PUT | `/api/{list}/order` | Bearer | `{ ids: [...] }` |
+
+`{list}` is `tasks`, `notes` or `countdowns`.
 
 Run the API tests with `php artisan test`.
 
@@ -174,11 +182,26 @@ server's document root at `public/`. If the host only lets you use the repositor
 folder as document root (Apache), the root `.htaccess` forwards every request into
 `public/`.
 
+### Deploying to production
+
+```bash
+npm ci && npm run build                      # SPA -> public/ (commit it, or build on the server)
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize                         # caches config, routes, events
+```
+
+Set `APP_ENV=production` and `APP_DEBUG=false` in `.env`. `public/.htaccess` enables gzip and
+long-term caching of `/static/*` (file names carry a content hash) on Apache; on nginx add the
+equivalent `gzip` and `Cache-Control` rules for `/static/`.
+
 ## 🛠️ Tech Stack
 
 - **React 19** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool
+- **Tailwind CSS 3** - Compiled at build time
+- **Laravel 13 + MySQL** - API and storage
 - **Zustand** - State management
 - **Lucide React** - Icons
 - **Web Audio API** - Audio analysis

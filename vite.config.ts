@@ -1,12 +1,16 @@
 import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "tailwindcss";
+import autoprefixer from "autoprefixer";
 
 export default defineConfig(({ mode }) => {
     return {
         base: "./",
         root: "src",
-        publicDir: "src/assets",
+        // Copied as-is to the web root on build (stable URLs): PWA manifest,
+        // service worker, icons. Relative to `root`, i.e. src/public.
+        publicDir: "public",
         build: {
             // The SPA is built into Laravel's web root, next to index.php.
             outDir: "../public",
@@ -16,12 +20,18 @@ export default defineConfig(({ mode }) => {
             emptyOutDir: false,
             rollupOptions: {
                 output: {
-                    assetFileNames: "static/assets/[name][extname]",
-                    // entryFileNames: "public/[hash].js",
-                    manualChunks(id) {
-                        // Vendor chunks
+                    // Content hash in every file name, so the web server can let
+                    // browsers cache /static/* forever (see public/.htaccess).
+                    assetFileNames: "static/assets/[name]-[hash][extname]",
+                    manualChunks(id): string | undefined {
+                        // Only the libraries every page needs go into the shared
+                        // vendor chunk. Others (YouTube player, uuid...) stay with
+                        // the lazy component that imports them, so they are not
+                        // downloaded before that component is opened.
                         if (id.includes("node_modules")) {
-                            return "vendor";
+                            return /[\\/]node_modules[\\/](react|react-dom|scheduler|zustand|use-sync-external-store|@loadable|lucide-react|hoist-non-react-statics|react-is|@babel[\\/]runtime)[\\/]/.test(id)
+                                ? "vendor"
+                                : undefined;
                         }
 
                         for (const folder of [
@@ -31,7 +41,6 @@ export default defineConfig(({ mode }) => {
                         ]) {
                             if (id.includes(`/${folder}/`)) {
                                 const componentName = id.split(".")?.[0]?.split(`/`)?.at?.(-1);
-                                console.log(id, componentName);
                                 if (componentName) {
                                     return `${folder}/${componentName.toLowerCase()}`;
                                 }
@@ -48,6 +57,15 @@ export default defineConfig(({ mode }) => {
             host: "0.0.0.0",
             proxy: {
                 "/api": "http://localhost:8000",
+            },
+        },
+        css: {
+            // Inline so it does not depend on where Vite (root: "src") looks for a config.
+            postcss: {
+                plugins: [
+                    tailwindcss({ config: path.resolve(__dirname, "tailwind.config.js") }),
+                    autoprefixer(),
+                ],
             },
         },
         plugins: [react()],

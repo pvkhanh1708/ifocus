@@ -1,31 +1,32 @@
-import { useEffect, useState } from "react";
-import { apiRequest } from "../utils/api";
+import { useCallback, useRef, useState } from "react";
+import { DEFAULT_SAVE_DELAY_MS, getSetting, saveSetting } from "../stores/settings";
 
-export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
-    const [storedValue, setStoredValue] = useState<T>(initialValue);
+/**
+ * A persisted UI setting (name kept from the original localStorage version).
+ *
+ * The initial value comes from the settings loaded with the app (no request
+ * per hook), and changes are saved to the server debounced. Use a longer
+ * `saveDelayMs` for values that change continuously (e.g. a running timer):
+ * they are then saved when they settle or when the page is hidden.
+ */
+export function useLocalStorage<T>(
+    key: string,
+    initialValue: T,
+    saveDelayMs = DEFAULT_SAVE_DELAY_MS
+): [T, (value: T | ((val: T) => T)) => void] {
+    const [storedValue, setStoredValue] = useState<T>(() => getSetting(key, initialValue));
+    // Latest value, so functional updates fired in quick succession chain correctly.
+    const valueRef = useRef(storedValue);
 
-    useEffect(() => {
-        let active = true;
-        apiRequest<{ data: Record<string, unknown> }>("/api/data")
-            .then((response) => {
-                if (active && response.data[key] !== undefined) {
-                    setStoredValue(response.data[key] as T);
-                }
-            })
-            .catch((error) => console.error("Không thể đọc dữ liệu:", error));
-        return () => {
-            active = false;
-        };
-    }, [key]);
-
-    const setValue = (value: T | ((val: T) => T)) => {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        void apiRequest("/api/data", {
-            method: "PATCH",
-            body: JSON.stringify({ key, value: valueToStore }),
-        }).catch((error) => console.error("Không thể lưu dữ liệu:", error));
-    };
+    const setValue = useCallback(
+        (value: T | ((val: T) => T)) => {
+            const next = value instanceof Function ? value(valueRef.current) : value;
+            valueRef.current = next;
+            setStoredValue(next);
+            saveSetting(key, next, saveDelayMs);
+        },
+        [key, saveDelayMs]
+    );
 
     return [storedValue, setValue];
 }

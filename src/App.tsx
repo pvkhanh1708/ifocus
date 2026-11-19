@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import loadable from "@loadable/component";
 import {
@@ -13,6 +13,7 @@ import {
     PictureInPicture2,
     Menu,
     CalendarHeart,
+    LogOut,
 } from "lucide-react";
 import {
     useShowVisualizer,
@@ -25,6 +26,9 @@ import { LoadingFallback } from "./utils/loader";
 import { useAuth } from "./hooks/useAuth";
 import AuthScreen from "./components/AuthScreen";
 import { useAppStore } from "./stores/useAppStore";
+import { useSyncStatus } from "./stores/syncStatus";
+import { ApiError, withRetry } from "./utils/api";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 
 // screens
 const EffectsScreen = loadable(() => import("./components/ScreenEffects"), {
@@ -108,28 +112,174 @@ declare global {
     }
 }
 
+const PANEL_DEFAULT_WIDTH = 384;
+const PANEL_MIN_WIDTH = 320;
+
+const clampPanelWidth = (width: number) =>
+    Math.round(
+        Math.min(Math.max(width, PANEL_MIN_WIDTH), Math.max(PANEL_MIN_WIDTH, window.innerWidth * 0.9))
+    );
+
+/**
+ * Drag handle on the side panel's left edge (desktop only). While dragging the
+ * width is written straight to a CSS variable — no React re-render per mouse
+ * move — and committed (and saved) on release. Double-click resets it; arrow
+ * keys resize when focused.
+ */
+function PanelResizeHandle({
+    layoutRef,
+    width,
+    onResize,
+}: {
+    /** Element holding the --panel-width CSS variable. */
+    layoutRef: React.RefObject<HTMLDivElement | null>;
+    width: number;
+    onResize: (width: number) => void;
+}) {
+    const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+        const layout = layoutRef.current;
+        if (!layout || event.button !== 0) return;
+        event.preventDefault();
+        const handle = event.currentTarget;
+        handle.setPointerCapture(event.pointerId);
+
+        let current = width;
+        const previousCursor = document.body.style.cursor;
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+
+        const onMove = (e: PointerEvent) => {
+            current = clampPanelWidth(window.innerWidth - e.clientX);
+            layout.style.setProperty("--panel-width", `${current}px`);
+        };
+        const onUp = () => {
+            handle.removeEventListener("pointermove", onMove);
+            handle.removeEventListener("pointerup", onUp);
+            handle.removeEventListener("pointercancel", onUp);
+            document.body.style.cursor = previousCursor;
+            document.body.style.userSelect = "";
+            onResize(current);
+        };
+
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onUp);
+        handle.addEventListener("pointercancel", onUp);
+    };
+
+    return (
+        <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Kéo để đổi độ rộng bảng"
+            aria-valuenow={width}
+            aria-valuemin={PANEL_MIN_WIDTH}
+            tabIndex={0}
+            title="Kéo để đổi độ rộng · Nhấp đúp để về mặc định"
+            onPointerDown={startDrag}
+            onDoubleClick={() => onResize(PANEL_DEFAULT_WIDTH)}
+            onKeyDown={(e) => {
+                if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                    e.preventDefault();
+                    onResize(clampPanelWidth(width + (e.key === "ArrowLeft" ? 32 : -32)));
+                }
+            }}
+            className="group absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none sm:block focus:outline-none"
+        >
+            <div className="mx-auto h-full w-px bg-transparent transition-colors group-hover:bg-white/40 group-focus-visible:bg-white/60 group-active:bg-white/70" />
+            <div className="absolute left-1/2 top-1/2 h-10 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+        </div>
+    );
+}
+
+/** Shown when a change could not be saved even after retrying. */
+function SyncErrorBanner() {
+    const error = useSyncStatus((state) => state.error);
+    if (!error) return null;
+    return (
+        <div
+            role="alert"
+            className="fixed left-1/2 top-4 z-[100] -translate-x-1/2 rounded-full border border-red-300/30 bg-red-950/80 px-4 py-2 text-sm text-red-100 shadow-lg backdrop-blur"
+        >
+            Chưa lưu được thay đổi: {error}
+        </div>
+    );
+}
+
+function LoadErrorScreen({
+    message,
+    onRetry,
+    onLogout,
+}: {
+    message: string;
+    onRetry: () => void;
+    onLogout: () => void;
+}) {
+    return (
+        <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-[max(1rem,env(safe-area-inset-top))] text-white">
+            <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 text-center shadow-2xl">
+                <h1 className="text-lg font-semibold">Không tải được dữ liệu</h1>
+                <p className="mt-2 text-sm text-white/60">{message}</p>
+                <button
+                    onClick={onRetry}
+                    className="mt-5 w-full rounded-lg bg-white px-4 py-2.5 font-medium text-black hover:bg-white/90"
+                >
+                    Thử lại
+                </button>
+                <button onClick={onLogout} className="mt-3 w-full text-sm text-white/60 hover:text-white">
+                    Đăng xuất
+                </button>
+            </div>
+        </main>
+    );
+}
+
 function App() {
     const auth = useAuth();
     const hydrate = useAppStore((state) => state.hydrate);
     const [isHydrated, setIsHydrated] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
+
+    // Never show the app with empty data when loading failed: the user would
+    // think their tasks/notes were gone, and edits would not be saved.
+    const load = useCallback(() => {
+        setLoadError(null);
+        setIsHydrated(false);
+        withRetry(() => hydrate(), 3)
+            .then(() => setIsHydrated(true))
+            .catch((error) => {
+                // 401: useAuth already switched to the login screen.
+                if (error instanceof ApiError && error.status === 401) return;
+                setLoadError(error instanceof Error ? error.message : "Lỗi không xác định.");
+            });
+    }, [hydrate]);
 
     useEffect(() => {
         if (!auth.session) {
             setIsHydrated(false);
+            setLoadError(null);
             return;
         }
-        hydrate().then(() => setIsHydrated(true)).catch(() => setIsHydrated(true));
-    }, [auth.session, hydrate]);
+        load();
+    }, [auth.session, load]);
 
     if (!auth.session) {
         return <AuthScreen {...auth} />;
+    }
+
+    if (loadError) {
+        return <LoadErrorScreen message={loadError} onRetry={load} onLogout={auth.logout} />;
     }
 
     if (!isHydrated) {
         return LoadingFallback;
     }
 
-    return <AppContent username={auth.session.user.username} onLogout={auth.logout} />;
+    return (
+        <>
+            <AppContent username={auth.session.user.username} onLogout={auth.logout} />
+            <SyncErrorBanner />
+        </>
+    );
 }
 
 function AppContent({
@@ -151,6 +301,9 @@ function AppContent({
     const lastActivePanelRef = useRef<string>(Panels[0]?.label);
 
     const [visitedPanels, setVisitedPanels] = useState<Set<string>>(new Set());
+    // Side panel width on desktop, resizable by dragging its left edge (saved per account).
+    const [panelWidth, setPanelWidth] = useLocalStorage<number>("panelWidth", PANEL_DEFAULT_WIDTH);
+    const layoutRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isPiPWebsite, setIsPiPWebsite] = useState(false);
     const pipWindowRef = useRef<Window | null>(null);
@@ -263,7 +416,13 @@ function AppContent({
     }, []);
 
     return (
-        <div className="pip-capture-root relative w-screen h-screen overflow-hidden font-sans">
+        <div
+            ref={layoutRef}
+            className="pip-capture-root relative w-screen h-screen overflow-hidden font-sans"
+            // Shared by the side panel (its width) and the main layer (its right
+            // padding), so the timer stays centred in the space left visible.
+            style={{ ["--panel-width" as string]: `${clampPanelWidth(panelWidth)}px` }}
+        >
             {/* Dynamic Background - now uses Zustand internally */}
             <Background />
 
@@ -275,29 +434,39 @@ function AppContent({
                 />
             )}
 
-            {/* Main Content Layer */}
-            <div className="relative z-10 w-full h-full flex flex-col">
+            {/* Main Content Layer (shifts left of the open side panel on desktop) */}
+            <div
+                className={`relative z-10 w-full h-full flex flex-col transition-[padding] duration-300 ease-out ${activePanel ? "sm:pr-[min(var(--panel-width),90vw)]" : ""
+                    }`}
+            >
                 {/* Header / Top Bar */}
-                <div className="flex justify-between items-center p-3 pointer-events-auto">
+                <div className="flex justify-between items-center p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pointer-events-auto">
                     <div
                         className="flex items-center gap-3 cursor-pointer hover:bg-white/10 rounded-lg p-2 transition-colors"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center">
-                            <span className="font-bold text-white">F</span>
-                        </div>
+                        <img
+                            src="/icons/icon-192.png"
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-lg shadow-md shadow-black/30"
+                        />
                         <span className="text-white font-semibold tracking-wide text-lg shadow-black drop-shadow-md">
                             iFocus
                         </span>
-                        <span className="text-xs text-white/50">{username}</span>
+                        <span className="hidden text-xs text-white/50 sm:inline">{username}</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                        {/* Icon only on phones, icon + label from sm up */}
                         <button
                             onClick={() => void onLogout()}
-                            className="rounded-full p-3 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white"
-                            title="Đăng xuất"
+                            className="flex items-center gap-1.5 whitespace-nowrap rounded-full p-3 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                            title={`Đăng xuất (${username})`}
+                            aria-label="Đăng xuất"
                         >
-                            Đăng xuất
+                            <LogOut size={18} className="sm:hidden" />
+                            <span className="hidden sm:inline">Đăng xuất</span>
                         </button>
                         {/* PiP button - desktop only */}
                         <button
@@ -343,7 +512,7 @@ function AppContent({
                 </div>
 
                 {/* Bottom Dock / Navigation */}
-                <div className="flex justify-center pb-6 pointer-events-auto hidden sm:flex">
+                <div className="flex justify-center pb-[max(1.5rem,env(safe-area-inset-bottom))] pointer-events-auto hidden sm:flex">
                     {/* We apply the same transition logic here to keep it centered relative to the timer */}
                     <div className={`transition-all duration-500`}>
                         <div className="flex gap-0 sm:gap-2 p-2 bg-black/40 opacity-50 hover:opacity-100 hover:backdrop-blur transition-all rounded-2xl border border-white/10 shadow-2xl">
@@ -365,13 +534,18 @@ function AppContent({
 
             {/* Side Panel Drawer - Keep all panels mounted, just hide them */}
             <div
-                className={`absolute top-0 right-0 h-full w-full sm:w-96 glass-panel border-l border-white/10 transition-transform duration-300 ease-out ${!!activePanel ? "translate-x-0" : "translate-x-full"
+                className={`absolute top-0 right-0 h-full w-full sm:w-[var(--panel-width)] sm:max-w-[90vw] glass-panel border-l border-white/10 transition-transform duration-300 ease-out ${!!activePanel ? "translate-x-0" : "translate-x-full"
                     }`}
                 style={{
                     zIndex: !!activePanel ? 50 : -1,
                 }}
             >
-                <div className="h-full flex flex-col p-4 sm:p-6">
+                <PanelResizeHandle
+                    layoutRef={layoutRef}
+                    width={panelWidth}
+                    onResize={setPanelWidth}
+                />
+                <div className="h-full flex flex-col p-4 sm:p-6 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] pr-[max(1rem,env(safe-area-inset-right))] sm:pr-[max(1.5rem,env(safe-area-inset-right))]">
                     {/* Header with navigation tabs */}
                     <div className="flex items-center justify-between mb-4">
                         {/* Tab Navigation */}

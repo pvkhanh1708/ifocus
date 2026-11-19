@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 
 class DataController extends Controller
 {
+    /** Keys that now live in their own tables (see routes/api.php). */
+    public const LIST_KEYS = ['tasks', 'notes', 'countdowns'];
+
     public function index(Request $request): JsonResponse
     {
         return response()->json(['data' => UserData::mapFor($request->user())]);
@@ -26,6 +29,10 @@ class DataController extends Controller
 
         if ($key === '' || mb_strlen($key) > 100) {
             return response()->json(['error' => 'Thiếu khóa dữ liệu.'], 400);
+        }
+
+        if (in_array($key, self::LIST_KEYS, true)) {
+            return response()->json(['error' => "Dữ liệu \"{$key}\" được lưu qua /api/{$key}."], 400);
         }
 
         UserData::put($request->user(), $key, $body->value ?? null);

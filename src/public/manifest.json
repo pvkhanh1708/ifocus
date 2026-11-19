@@ -1,0 +1,35 @@
+{
+    "name": "iFocus – Tập trung & Pomodoro",
+    "short_name": "iFocus",
+    "description": "Hẹn giờ Pomodoro, âm thanh thiên nhiên, ghi chú, checklist và đếm ngược trong một không gian tập trung.",
+    "lang": "vi",
+    "id": "/",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone"],
+    "orientation": "any",
+    "background_color": "#09101e",
+    "theme_color": "#09101e",
+    "categories": ["productivity", "lifestyle"],
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

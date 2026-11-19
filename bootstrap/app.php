@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Middleware\RejectInvalidJson;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -15,7 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Keep user text exactly as typed (note content, task text...).
+        $middleware->remove([TrimStrings::class, ConvertEmptyStringsToNull::class]);
+        $middleware->api(prepend: [RejectInvalidJson::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // The frontend reads `{ error: string }` from every failed API response.

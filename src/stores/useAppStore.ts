@@ -15,6 +15,16 @@ import {
     DEFAULT_SYNC_VISUALIZER_CONFIG,
 } from "../constants";
 import { apiRequest } from "../utils/api";
+import { saveSetting, setSettingsCache } from "./settings";
+import {
+    createItem,
+    deleteItem,
+    fetchList,
+    reorderItems,
+    updateItem,
+    updateItemDebounced,
+    type ListName,
+} from "./listSync";
 
 // ============================================================================
 // State Interfaces
@@ -59,7 +69,6 @@ interface BackgroundState {
 
 interface TasksState {
     tasks: Task[];
-    setTasks: (tasks: Task[] | ((prev: Task[]) => Task[])) => void;
     addTask: (task: Task) => void;
     toggleTask: (id: string) => void;
     deleteTask: (id: string) => void;
@@ -67,17 +76,16 @@ interface TasksState {
 
 interface NotesState {
     notes: Note[];
-    setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void;
     addNote: (note: Note) => void;
-    updateNote: (id: string, updates: Partial<Note>) => void;
+    updateNote: (id: string, updates: Partial<Omit<Note, "id">>) => void;
     deleteNote: (id: string) => void;
 }
 
 interface CountdownsState {
     countdowns: Countdown[];
-    setCountdowns: (
-        countdowns: Countdown[] | ((prev: Countdown[]) => Countdown[])
-    ) => void;
+    addCountdown: (countdown: Countdown) => void;
+    deleteCountdown: (id: string) => void;
+    reorderCountdowns: (fromIndex: number, toIndex: number) => void;
 }
 
 interface ServerState {
@@ -100,11 +108,18 @@ interface AppState
 // Store Creation
 // ============================================================================
 
-const save = (key: string, value: unknown) => {
-    void apiRequest("/api/data", {
-        method: "PATCH",
-        body: JSON.stringify({ key, value }),
-    }).catch((error) => console.error("Không thể lưu dữ liệu:", error));
+/** Save a UI setting to /api/data (debounced per key, see stores/settings.ts). */
+const save = (key: string, value: unknown) => saveSetting(key, value);
+
+/**
+ * Lists are updated optimistically. If a request fails, reload that list from
+ * the server so the UI shows what is actually saved.
+ */
+const resyncList = (list: ListName) => (error: unknown) => {
+    console.error(`Không thể lưu ${list}:`, error);
+    fetchList(list)
+        .then((items) => useAppStore.setState({ [list]: items } as Partial<AppState>))
+        .catch((fetchError) => console.error(`Không thể tải lại ${list}:`, fetchError));
 };
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -183,74 +198,92 @@ export const useAppStore = create<AppState>()((set, get) => ({
     // ========================================
     // Tasks State
     // ========================================
+    // Each change is sent as a single-item request to /api/tasks.
     tasks: [],
-    setTasks: (tasks) => {
-        const value = typeof tasks === "function" ? tasks(get().tasks) : tasks;
-        set({ tasks: value });
-        save("tasks", value);
-    },
     addTask: (task) => {
-        const value = [...get().tasks, task];
-        set({ tasks: value });
-        save("tasks", value);
+        set((state) => ({ tasks: [...state.tasks, task] }));
+        createItem("tasks", task).catch(resyncList("tasks"));
     },
     toggleTask: (id) => {
+        const task = get().tasks.find((t) => t.id === id);
+        if (!task) return;
+        const completed = !task.completed;
         set((state) => ({
-            tasks: state.tasks.map((t) =>
-                t.id === id ? { ...t, completed: !t.completed } : t
-            ),
+            tasks: state.tasks.map((t) => (t.id === id ? { ...t, completed } : t)),
         }));
-        save("tasks", get().tasks);
+        updateItem("tasks", id, { completed }).catch(resyncList("tasks"));
     },
     deleteTask: (id) => {
-        set((state) => ({
-            tasks: state.tasks.filter((t) => t.id !== id),
-        }));
-        save("tasks", get().tasks);
+        set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }));
+        deleteItem("tasks", id).catch(resyncList("tasks"));
     },
 
     // ========================================
     // Notes State
     // ========================================
     notes: [],
-    setNotes: (notes) => {
-        set((state) => ({
-            notes: typeof notes === "function" ? notes(state.notes) : notes,
-        }));
-        save("notes", get().notes);
-    },
     addNote: (note) => {
-        const value = [note, ...get().notes];
-        set({ notes: value });
-        save("notes", value);
+        set((state) => ({ notes: [note, ...state.notes] }));
+        createItem("notes", note).catch(resyncList("notes"));
     },
     updateNote: (id, updates) => {
+        const changes = { ...updates, updatedAt: Date.now() };
         set((state) => ({
-            notes: state.notes.map((n) =>
-                n.id === id ? { ...n, ...updates, updatedAt: Date.now() } : n
-            ),
+            notes: state.notes.map((n) => (n.id === id ? { ...n, ...changes } : n)),
         }));
-        save("notes", get().notes);
+        // Typing fires on every keystroke: send once the user pauses.
+        updateItemDebounced("notes", id, changes, resyncList("notes"));
     },
     deleteNote: (id) => {
-        set((state) => ({
-            notes: state.notes.filter((n) => n.id !== id),
-        }));
-        save("notes", get().notes);
+        set((state) => ({ notes: state.notes.filter((n) => n.id !== id) }));
+        deleteItem("notes", id).catch(resyncList("notes"));
     },
 
     // ========================================
     // Countdowns State
     // ========================================
     countdowns: [],
-    setCountdowns: (countdowns) => {
-        const value = typeof countdowns === "function" ? countdowns(get().countdowns) : countdowns;
-        set({ countdowns: value });
-        save("countdowns", value);
+    addCountdown: (countdown) => {
+        set((state) => ({ countdowns: [countdown, ...state.countdowns] }));
+        createItem("countdowns", countdown).catch(resyncList("countdowns"));
     },
+    deleteCountdown: (id) => {
+        set((state) => ({ countdowns: state.countdowns.filter((c) => c.id !== id) }));
+        deleteItem("countdowns", id).catch(resyncList("countdowns"));
+    },
+    reorderCountdowns: (fromIndex, toIndex) => {
+        if (fromIndex === toIndex) return;
+        const updated = [...get().countdowns];
+        const [moved] = updated.splice(fromIndex, 1);
+        if (!moved) return;
+        updated.splice(toIndex, 0, moved);
+        set({ countdowns: updated });
+        reorderItems("countdowns", updated.map((c) => c.id)).catch(resyncList("countdowns"));
+    },
+
     hydrate: async () => {
-        const response = await apiRequest<{ data: Record<string, unknown> }>("/api/data");
-        set((state) => ({ ...state, ...response.data }));
+        // Settings and every list in a single request.
+        const { data, tasks, notes, countdowns } = await apiRequest<{
+            data: Record<string, unknown>;
+            tasks: Task[];
+            notes: Note[];
+            countdowns: Countdown[];
+        }>("/api/state");
+
+        // Components using useLocalStorage read their settings from this cache.
+        setSettingsCache(data);
+
+        // Only take keys this store owns as plain values, so a stored setting
+        // can never overwrite an action (function) of the store.
+        set((state) => {
+            const owned: Partial<AppState> = {};
+            for (const [key, value] of Object.entries(data)) {
+                if (key in state && typeof state[key as keyof AppState] !== "function") {
+                    (owned as Record<string, unknown>)[key] = value;
+                }
+            }
+            return { ...owned, tasks, notes, countdowns };
+        });
     },
 }));
 
@@ -297,18 +330,18 @@ export const useSetShowVideoModal = () =>
 
 // Tasks selectors
 export const useTasks = () => useAppStore((s) => s.tasks);
-export const useSetTasks = () => useAppStore((s) => s.setTasks);
 export const useAddTask = () => useAppStore((s) => s.addTask);
 export const useToggleTask = () => useAppStore((s) => s.toggleTask);
 export const useDeleteTask = () => useAppStore((s) => s.deleteTask);
 
 // Notes selectors
 export const useNotes = () => useAppStore((s) => s.notes);
-export const useSetNotes = () => useAppStore((s) => s.setNotes);
 export const useAddNote = () => useAppStore((s) => s.addNote);
 export const useUpdateNote = () => useAppStore((s) => s.updateNote);
 export const useDeleteNote = () => useAppStore((s) => s.deleteNote);
 
 // Countdown selectors
 export const useCountdowns = () => useAppStore((s) => s.countdowns);
-export const useSetCountdowns = () => useAppStore((s) => s.setCountdowns);
+export const useAddCountdown = () => useAppStore((s) => s.addCountdown);
+export const useDeleteCountdown = () => useAppStore((s) => s.deleteCountdown);
+export const useReorderCountdowns = () => useAppStore((s) => s.reorderCountdowns);
