@@ -115,7 +115,7 @@ A beautiful, feature-rich **Pomodoro Timer** with stunning **Music Visualizer** 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- PHP 8+ with the JSON and password extensions
+- PHP 8.4+, Composer, MySQL 8 (Laragon works out of the box)
 - Node.js 18+ or Bun for building the frontend
 
 ### Installation
@@ -125,33 +125,54 @@ A beautiful, feature-rich **Pomodoro Timer** with stunning **Music Visualizer** 
 git clone https://github.com/hoangtran0410/ifocus.git
 cd ifocus
 
-# Install dependencies
+# Frontend dependencies
 npm install
-# or
-bun install
 
-# Start the PHP API server
+# Backend (Laravel + MySQL)
+composer install
+cp .env.example .env          # then set DB_DATABASE / DB_USERNAME / DB_PASSWORD
+php artisan key:generate
+php artisan migrate
+
+# Start the Laravel API on :8000
 npm run server
-# In another terminal, start the Vite frontend:
+# In another terminal, start the Vite frontend (proxies /api to :8000)
 npm run dev
-# or
-bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-The PHP API stores users, sessions, and per-user application data in `data/db.json`.
-Only the login session token is stored in the browser's local storage. For Vite development,
-set `VITE_API_URL=http://localhost:8000` before starting the frontend. On PHP hosting,
-upload `api.php`, `.htaccess`, `data/db.json`, and the built frontend to the same site.
+Users, login tokens and per-user settings are stored in MySQL (`users`, `api_tokens`,
+`user_data` — one row per setting key). Only the login token is kept in the browser.
+
+#### Migrating from the old `data/db.json`
+
+```bash
+php artisan ifocus:import-json /path/to/db.json   # safe to re-run
+```
+
+#### API
+
+| Method | Path | Auth | Body |
+| ------ | ---- | ---- | ---- |
+| POST | `/api/auth/register` | – | `{ username, password }` |
+| POST | `/api/auth/login` | – | `{ username, password }` |
+| POST | `/api/auth/logout` | Bearer | – |
+| GET | `/api/data` | Bearer | – |
+| PATCH | `/api/data` | Bearer | `{ key, value }` |
+
+Run the API tests with `php artisan test`.
 
 ### Building for Production
 
 ```bash
 npm run build
-# or
-bun run build
 ```
+
+The SPA is built into `public/` (next to Laravel's `index.php`). Point the web
+server's document root at `public/`. If the host only lets you use the repository
+folder as document root (Apache), the root `.htaccess` forwards every request into
+`public/`.
 
 ## 🛠️ Tech Stack
 
@@ -200,11 +221,11 @@ ifocus/
 │   ├── constants.ts          # App constants & defaults
 │   ├── types.ts              # TypeScript type definitions
 │   └── index.tsx             # Application entry point
-├── public/
-│   ├── assets/               # Public static assets
-│   ├── components/           # Pre-built component bundles
-│   └── visualizers/          # Pre-built visualizer bundles
-├── index.html                # HTML entry point
+├── app/                      # Laravel: controllers, models, import command
+├── database/migrations/      # MySQL schema
+├── routes/api.php            # API routes
+├── tests/Feature/            # API tests
+├── public/                   # Web root: index.php + built SPA (static/)
 ├── vite.config.ts            # Vite configuration
 └── tsconfig.json             # TypeScript configuration
 ```

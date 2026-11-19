@@ -8,13 +8,15 @@ export default defineConfig(({ mode }) => {
         root: "src",
         publicDir: "src/assets",
         build: {
-            outDir: "../",
+            // The SPA is built into Laravel's web root, next to index.php.
+            outDir: "../public",
             copyPublicDir: true,
-            assetsDir: "public",
+            assetsDir: "static",
+            // Never wipe the folder: it also holds Laravel's index.php and .htaccess.
             emptyOutDir: false,
             rollupOptions: {
                 output: {
-                    assetFileNames: "public/assets/[name][extname]",
+                    assetFileNames: "static/assets/[name][extname]",
                     // entryFileNames: "public/[hash].js",
                     manualChunks(id) {
                         // Vendor chunks

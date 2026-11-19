@@ -5,8 +5,8 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "server": "php -S localhost:8000 api.php",
-        "build": "rm -rf public && vite build",
+        "server": "php artisan serve --port=8000",
+        "build": "node -e \"require('fs').rmSync('public/static',{recursive:true,force:true})\" && vite build",
         "preview": "vite preview"
     },
     "dependencies": {

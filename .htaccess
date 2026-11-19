@@ -1,7 +1,7 @@
-RewriteEngine On
-
-# Protect data folder
-RewriteRule ^data/ - [F,L]
-
-# Route API requests to api.php
-RewriteRule ^api/(.*)$ api.php [L,QSA]
+# Fallback for Apache hosts whose document root is this repository folder.
+# Preferred setup: point the document root straight at public/.
+# Everything is forwarded into public/, so .env, vendor/, storage/... are never served.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

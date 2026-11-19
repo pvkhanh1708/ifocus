@@ -30,14 +30,11 @@ export const clearSession = () => {
 
 export const apiRequest = async <T>(path: string, options: RequestInit = {}) => {
     const session = getSession();
-    const requestPath =
-        !API_BASE && !import.meta.env.DEV
-            ? `/api.php?route=${encodeURIComponent(path.replace(/^\/api/, ""))}`
-            : `${API_BASE}${path}`;
-    const response = await fetch(requestPath, {
+    const response = await fetch(`${API_BASE}${path}`, {
         ...options,
         headers: {
             "Content-Type": "application/json",
+            Accept: "application/json",
             ...(session ? { Authorization: `Bearer ${session.token}` } : {}),
             ...options.headers,
         },
