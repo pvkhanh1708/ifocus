@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { installIOSViewportFix } from './utils/iosViewportFix';
+
+// Before the first render, so the app is full height from the start.
+installIOSViewportFix();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

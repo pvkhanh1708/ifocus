@@ -7,7 +7,7 @@
  * - /api/*, audio/video and Range requests: not handled (straight to network).
  */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `ifocus-shell-${VERSION}`;
 const ASSET_CACHE = `ifocus-assets-${VERSION}`;
 const SHELL_URLS = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png", "/favicon.ico"];
