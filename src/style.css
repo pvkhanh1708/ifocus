@@ -252,6 +252,23 @@ body {
 /* ---------------------------------------------------------------------------
    Mobile / iOS PWA
    --------------------------------------------------------------------------- */
+/* Top inset for content. iOS 26.1+ / 27 Home Screen web apps fade the content
+   just below the status bar (a page cannot turn it off): in the installed iOS
+   app, keep controls a further 20px clear of it. Browsers, Android and desktop
+   are unchanged. (Same approach as the hoctienganh project.) */
+:root {
+  --pwa-fade: 0px;
+  --safe-top: calc(env(safe-area-inset-top, 0px) + var(--pwa-fade));
+}
+@media (display-mode: standalone) {
+  @supports (-webkit-touch-callout: none) {
+    /* iOS only */
+    :root {
+      --pwa-fade: 20px;
+    }
+  }
+}
+
 html {
   /* Same colour as the app icon: no white flash behind the app or on bounce. */
   background: #09101e;

@@ -22,10 +22,10 @@ export default function AuthScreen({ login, register, isLoading, notice }: AuthP
     };
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-[max(1rem,env(safe-area-inset-top))] text-white">
+        <main className="fixed inset-0 flex flex-col items-center overflow-y-auto bg-neutral-950 px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-white">
             <form
                 onSubmit={submit}
-                className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl"
+                className="my-auto w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl"
             >
                 <div className="mb-6 text-center">
                     <img

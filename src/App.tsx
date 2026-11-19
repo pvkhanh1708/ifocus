@@ -215,8 +215,8 @@ function LoadErrorScreen({
     onLogout: () => void;
 }) {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-[max(1rem,env(safe-area-inset-top))] text-white">
-            <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 text-center shadow-2xl">
+        <main className="fixed inset-0 flex flex-col items-center overflow-y-auto bg-neutral-950 px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-white">
+            <div className="my-auto w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 text-center shadow-2xl">
                 <h1 className="text-lg font-semibold">Không tải được dữ liệu</h1>
                 <p className="mt-2 text-sm text-white/60">{message}</p>
                 <button
@@ -418,7 +418,7 @@ function AppContent({
     return (
         <div
             ref={layoutRef}
-            className="pip-capture-root relative w-screen h-screen overflow-hidden font-sans"
+            className="pip-capture-root fixed inset-0 overflow-hidden font-sans"
             // Shared by the side panel (its width) and the main layer (its right
             // padding), so the timer stays centred in the space left visible.
             style={{ ["--panel-width" as string]: `${clampPanelWidth(panelWidth)}px` }}
@@ -440,7 +440,7 @@ function AppContent({
                     }`}
             >
                 {/* Header / Top Bar */}
-                <div className="flex justify-between items-center p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pointer-events-auto">
+                <div className="flex justify-between items-center p-3 pt-[max(0.75rem,calc(var(--safe-top)+0.25rem))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pointer-events-auto">
                     <div
                         className="flex items-center gap-3 cursor-pointer hover:bg-white/10 rounded-lg p-2 transition-colors"
                     >
@@ -545,7 +545,7 @@ function AppContent({
                     width={panelWidth}
                     onResize={setPanelWidth}
                 />
-                <div className="h-full flex flex-col p-4 sm:p-6 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] pr-[max(1rem,env(safe-area-inset-right))] sm:pr-[max(1.5rem,env(safe-area-inset-right))]">
+                <div className="h-full flex flex-col p-4 sm:p-6 pt-[max(1rem,var(--safe-top))] sm:pt-[max(1.5rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] pr-[max(1rem,env(safe-area-inset-right))] sm:pr-[max(1.5rem,env(safe-area-inset-right))]">
                     {/* Header with navigation tabs */}
                     <div className="flex items-center justify-between mb-4">
                         {/* Tab Navigation */}
