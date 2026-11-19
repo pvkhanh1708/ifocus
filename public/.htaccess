@@ -34,10 +34,8 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-    # Built files have a content hash in their name: cache them for a year.
-    <If "%{REQUEST_URI} =~ m#^/static/#">
-        Header set Cache-Control "public, max-age=31536000, immutable"
-    </If>
+    # Long-term caching of the content-hashed build lives in static/.htaccess
+    # (copied from src/public/static/ on build).
     # The SPA shell, service worker and PWA manifest must always be revalidated
     # so new builds are picked up.
     <FilesMatch "^(index\.html|sw\.js|manifest\.json)$">

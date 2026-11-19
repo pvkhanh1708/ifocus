@@ -184,16 +184,33 @@ folder as document root (Apache), the root `.htaccess` forwards every request in
 
 ### Deploying to production
 
+The server needs **PHP 8.4 + Composer + MySQL only — no Node.js**. The Vite build is
+committed, so always build locally before pushing:
+
 ```bash
-npm ci && npm run build                      # SPA -> public/ (commit it, or build on the server)
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan optimize                         # caches config, routes, events
+# on your machine
+npm run build
+git add -A && git commit -m "..." && git push
+
+# on the server (first time: clone, create .env, key:generate — see below)
+bash scripts/deploy.sh      # git pull, composer install --no-dev, migrate, optimize
 ```
 
-Set `APP_ENV=production` and `APP_DEBUG=false` in `.env`. `public/.htaccess` enables gzip and
-long-term caching of `/static/*` (file names carry a content hash) on Apache; on nginx add the
-equivalent `gzip` and `Cache-Control` rules for `/static/`.
+First install on the server:
+
+```bash
+git clone https://github.com/pvkhanh1708/ifocus.git && cd ifocus
+composer install --no-dev --optimize-autoloader
+cp .env.example .env        # APP_ENV=production, APP_DEBUG=false, APP_URL, DB_*
+php artisan key:generate
+php artisan migrate --force
+php artisan optimize
+```
+
+Point the web root at `public/` (on shared hosting such as Hostinger: symlink
+`public_html` to it). If that is impossible, the root `.htaccess` forwards every request
+into `public/`. `public/.htaccess` and `public/static/.htaccess` enable gzip and long-term
+caching on Apache/LiteSpeed; on nginx add equivalent rules. PWA install requires HTTPS.
 
 ## 🛠️ Tech Stack
 
