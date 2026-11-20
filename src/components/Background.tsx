@@ -370,7 +370,7 @@ export default function Background({
       <div
         ref={isModal ? undefined : videoContainerRef}
         className={
-          isModal ? "contents" : "fixed inset-0 w-full h-full overflow-hidden"
+          isModal ? "contents" : "absolute inset-x-0 top-0 w-full h-[var(--app-height,100%)] overflow-hidden"
         }
         style={
           isModal
@@ -456,7 +456,7 @@ export default function Background({
 
   const renderEffect = () => (
     <div
-      className="fixed inset-0 w-full h-full pointer-events-none"
+      className="absolute inset-x-0 top-0 w-full h-[var(--app-height,100%)] pointer-events-none"
       style={{ zIndex: 1 }}
     >
       <EffectsLayer type={effect} />

@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { installAppHeight } from './utils/appHeight';
+
+// Before the first render: the app shell is sized from this (see appHeight.ts).
+installAppHeight();
 
 
 const rootElement = document.getElementById('root');
