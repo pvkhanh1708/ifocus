@@ -17,7 +17,12 @@ const FALLBACK = "#09101e";
 const IMAGE_OVERLAY_DARKEN = 0.8;
 
 const setPageColors = (color: string) => {
-    document.documentElement.style.backgroundColor = color;
+    const root = document.documentElement;
+    root.style.backgroundColor = color;
+    // Safari 26+ tints the status bar from the fixed element touching the top
+    // edge (our fixed app shell), not from the page background: the shell and
+    // the background layer use this colour behind the image.
+    root.style.setProperty("--scene-edge", color);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
 };
 

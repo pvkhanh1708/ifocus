@@ -466,7 +466,7 @@ export default function Background({
   const backgroundElement = (
     <div
       ref={bgContainerRef}
-      className="absolute inset-0 w-full h-full -z-10 overflow-hidden bg-black"
+      className="absolute inset-0 w-full h-full -z-10 overflow-hidden bg-[var(--scene-edge,#000)]"
       style={{
         filter: getFilterStyle(),
         transformOrigin: "center center",

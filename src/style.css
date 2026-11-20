@@ -291,11 +291,13 @@ button,
   user-select: none;
 }
 
-/* Phones: the side panel covers the whole screen, so make it nearly opaque
-   (the timer and header behind it would otherwise show through). */
+/* Phones: the side panel covers the whole screen. Keep it glass (the scene
+   stays visible) but blur hard enough that the timer behind it can't be read. */
 @media (max-width: 639px) {
   .glass-panel {
-    background: rgba(12, 16, 26, 0.97);
+    background: rgba(12, 16, 26, 0.55);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+    backdrop-filter: blur(28px) saturate(140%);
   }
 }
 

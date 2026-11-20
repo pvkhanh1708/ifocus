@@ -440,7 +440,7 @@ function AppContent({
     return (
         <div
             ref={layoutRef}
-            className="pip-capture-root fixed inset-0 overflow-hidden font-sans"
+            className="pip-capture-root fixed inset-0 overflow-hidden font-sans bg-[var(--scene-edge,#09101e)]"
             // Shared by the side panel (its width) and the main layer (its right
             // padding), so the timer stays centred in the space left visible.
             style={{ ["--panel-width" as string]: `${clampPanelWidth(panelWidth)}px` }}
