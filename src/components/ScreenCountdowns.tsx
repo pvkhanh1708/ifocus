@@ -1,5 +1,6 @@
-import React, { memo, useMemo, useRef, useState } from "react";
-import { CalendarHeart, Clock3, Plus, Trash2, GripVertical, Clock } from "lucide-react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { CalendarHeart, Clock3, Plus, Trash2, GripVertical, Clock, X } from "lucide-react";
 import { v4 as uuid } from "uuid";
 import type { Countdown, CountdownType } from "../types";
 import { useNow } from "../hooks/useNow";
@@ -18,7 +19,8 @@ const getDateTimeInputValue = (date: Date) => {
 const getDefaultTarget = () =>
     getDateTimeInputValue(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
-const getDefaultDate = () => getDefaultTarget().slice(0, 10);
+// "Days since" counts from a past day: default to today, not a week ahead.
+const getDefaultDate = () => getDateTimeInputValue(new Date()).slice(0, 10);
 const getDefaultDuration = () => "00:30:00";
 
 const DURATION_PRESETS = [
@@ -312,17 +314,231 @@ const CountdownItem = memo(function CountdownItem({
     );
 });
 
+const TYPE_OPTIONS: { value: CountdownType; label: string; hint: string }[] = [
+    { value: "hoursUntil", label: "Đếm ngược đến ngày", hint: "Còn bao lâu nữa tới ngày giờ đã chọn" },
+    { value: "daysSince", label: "Số ngày đã qua", hint: "Đã bao nhiêu ngày kể từ một ngày" },
+    { value: "dailyCountdown", label: "Giờ hằng ngày", hint: "Đếm ngược tới một giờ, lặp lại mỗi ngày" },
+    { value: "duration", label: "Hẹn giờ", hint: "Đếm ngược một khoảng thời gian" },
+];
+
+const defaultTargetFor = (type: CountdownType) =>
+    type === "daysSince" ? getDefaultDate() : type === "dailyCountdown" ? "18:00" : getDefaultTarget();
+
+const fieldClass =
+    "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-white/50";
+
+/**
+ * "Add countdown" popup: a bottom sheet on phones, a centred dialog from sm up.
+ * Rendered in document.body — the side panel is transformed, which would make
+ * position: fixed relative to the panel instead of the screen.
+ */
+function AddCountdownDialog({
+    onAdd,
+    onClose,
+}: {
+    onAdd: (countdown: Countdown) => void;
+    onClose: () => void;
+}) {
+    const [title, setTitle] = useState("");
+    const [countdownType, setCountdownType] = useState<CountdownType>("hoursUntil");
+    const [targetAt, setTargetAt] = useState(getDefaultTarget);
+    const [duration, setDuration] = useState(getDefaultDuration);
+    const titleRef = useRef<HTMLInputElement>(null);
+    const timeRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        titleRef.current?.focus();
+        const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [onClose]);
+
+    const durationSeconds = countdownType === "duration" ? parseDuration(duration) : null;
+    const canSubmit =
+        title.trim() !== "" &&
+        (countdownType === "duration" ? !!durationSeconds && durationSeconds > 0 : !!targetAt);
+
+    const changeType = (type: CountdownType) => {
+        setCountdownType(type);
+        if (type === "duration") setDuration(getDefaultDuration());
+        else setTargetAt(defaultTargetFor(type));
+    };
+
+    const openPicker = () => {
+        try {
+            timeRef.current?.showPicker?.();
+        } catch {
+            // showPicker is not available everywhere; the native input still works.
+        }
+    };
+
+    const submit = (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!canSubmit) return;
+        onAdd({
+            id: uuid(),
+            title: title.trim(),
+            targetAt: countdownType === "duration" ? "" : targetAt,
+            type: countdownType,
+            durationSeconds: durationSeconds ?? undefined,
+            startedAt: countdownType === "duration" ? Date.now() : undefined,
+        });
+        onClose();
+    };
+
+    const timeLabel =
+        countdownType === "daysSince"
+            ? "Từ ngày"
+            : countdownType === "dailyCountdown"
+                ? "Giờ mỗi ngày"
+                : countdownType === "duration"
+                    ? "Thời lượng (giờ : phút : giây)"
+                    : "Đến ngày giờ";
+
+    return createPortal(
+        <div
+            className="fixed inset-0 z-[300] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+            onPointerDown={(event) => event.target === event.currentTarget && onClose()}
+        >
+            <form
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="add-countdown-title"
+                onSubmit={submit}
+                className="w-full rounded-t-2xl border border-white/10 bg-neutral-900/95 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-white shadow-2xl sm:max-w-md sm:rounded-2xl sm:pb-5"
+            >
+                <div className="mb-4 flex items-center justify-between">
+                    <h2 id="add-countdown-title" className="flex items-center gap-2 text-lg font-semibold">
+                        <CalendarHeart size={20} className="text-white/70" /> Thêm đếm ngược
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Đóng"
+                        className="rounded-lg p-1.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    <label className="block">
+                        <span className="mb-1.5 block text-xs font-medium text-white/50">Tên</span>
+                        <input
+                            ref={titleRef}
+                            type="text"
+                            value={title}
+                            onChange={(event) => setTitle(event.target.value)}
+                            placeholder="Bạn đang chờ đợi điều gì?"
+                            maxLength={255}
+                            className={fieldClass}
+                        />
+                    </label>
+
+                    <div>
+                        <span className="mb-1.5 block text-xs font-medium text-white/50">Kiểu đếm</span>
+                        <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Kiểu đếm">
+                            {TYPE_OPTIONS.map((option) => {
+                                const active = countdownType === option.value;
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={active}
+                                        title={option.hint}
+                                        onClick={() => changeType(option.value)}
+                                        className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                                            active
+                                                ? "border-white bg-white font-medium text-black"
+                                                : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                                        }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="mt-1.5 text-xs text-white/40">
+                            {TYPE_OPTIONS.find((option) => option.value === countdownType)?.hint}
+                        </p>
+                    </div>
+
+                    <label className="block">
+                        <span className="mb-1.5 block text-xs font-medium text-white/50">{timeLabel}</span>
+                        <input
+                            ref={timeRef}
+                            type={
+                                countdownType === "daysSince"
+                                    ? "date"
+                                    : countdownType === "dailyCountdown" || countdownType === "duration"
+                                        ? "time"
+                                        : "datetime-local"
+                            }
+                            step={countdownType === "duration" ? "1" : undefined}
+                            value={countdownType === "duration" ? duration : targetAt}
+                            onChange={(event) =>
+                                countdownType === "duration"
+                                    ? setDuration(event.target.value)
+                                    : setTargetAt(event.target.value)
+                            }
+                            onClick={openPicker}
+                            className={`${fieldClass} cursor-pointer [color-scheme:dark]`}
+                        />
+                    </label>
+
+                    {countdownType === "duration" && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="mr-1 flex items-center gap-1 text-xs text-white/40">
+                                <Clock size={12} /> Chọn nhanh:
+                            </span>
+                            {DURATION_PRESETS.map((preset) => (
+                                <button
+                                    key={preset.value}
+                                    type="button"
+                                    onClick={() => setDuration(preset.value)}
+                                    className={`rounded px-2 py-0.5 text-xs transition-colors ${
+                                        duration === preset.value
+                                            ? "bg-white font-semibold text-black"
+                                            : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
+                                    }`}
+                                >
+                                    {preset.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="mt-6 flex justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-lg px-4 py-2 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={!canSubmit}
+                        className="rounded-lg bg-white px-5 py-2 text-sm font-semibold text-black transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        Thêm
+                    </button>
+                </div>
+            </form>
+        </div>,
+        document.body
+    );
+}
+
 export default function ScreenCountdowns() {
     const countdowns = useCountdowns();
     const saveNewCountdown = useAddCountdown();
     const deleteCountdown = useDeleteCountdown();
     const handleReorder = useReorderCountdowns();
-    const [title, setTitle] = useState("");
-    const [targetAt, setTargetAt] = useState(getDefaultTarget);
-    const [duration, setDuration] = useState(getDefaultDuration);
-    const [countdownType, setCountdownType] =
-        useState<CountdownType>("hoursUntil");
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [isAdding, setIsAdding] = useState(false);
+    const closeAdd = useCallback(() => setIsAdding(false), []);
 
     // Drag and drop: state drives the visuals, the ref lets the handlers below
     // stay stable so idle items never re-render while another one is dragged.
@@ -371,146 +587,32 @@ export default function ScreenCountdowns() {
         };
     }, [handleReorder]);
 
-    const openPicker = () => {
-        try {
-            inputRef.current?.showPicker?.();
-        } catch {}
-    };
-
-    const addCountdown = (event: React.FormEvent) => {
-        event.preventDefault();
-        if (!title.trim() || (countdownType !== "duration" && !targetAt)) return;
-
-        const durationSeconds =
-            countdownType === "duration" ? parseDuration(duration) : null;
-        if (countdownType === "duration" && (!durationSeconds || durationSeconds <= 0)) {
-            return;
-        }
-
-        const countdown: Countdown = {
-            id: uuid(),
-            title: title.trim(),
-            targetAt: countdownType === "duration" ? "" : targetAt,
-            type: countdownType,
-            durationSeconds: durationSeconds ?? undefined,
-            startedAt: countdownType === "duration" ? Date.now() : undefined,
-        };
-
-        saveNewCountdown(countdown);
-        setTitle("");
-        setDuration(getDefaultDuration());
-        setTargetAt(
-            countdownType === "daysSince"
-                ? getDefaultDate()
-                : countdownType === "dailyCountdown"
-                    ? "18:00"
-                    : getDefaultTarget()
-        );
-    };
-
     return (
         <div className="flex h-full flex-col text-white">
-            <form onSubmit={addCountdown} className="mb-5 space-y-2">
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(event) => setTitle(event.target.value)}
-                    placeholder="Bạn đang chờ đợi điều gì?"
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-white/50"
-                />
-                <select
-                    value={countdownType}
-                    onChange={(event) => {
-                        const type = event.target.value as CountdownType;
-                        setCountdownType(type);
-                        if (type === "duration") {
-                            setDuration(getDefaultDuration());
-                        } else {
-                            setTargetAt(
-                                type === "daysSince"
-                                    ? getDefaultDate()
-                                    : type === "dailyCountdown"
-                                        ? "18:00"
-                                        : getDefaultTarget()
-                            );
-                        }
-                    }}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-white/50"
+            <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                    <CalendarHeart size={20} /> Countdowns
+                </h3>
+                <button
+                    onClick={() => setIsAdding(true)}
+                    aria-label="Thêm đếm ngược"
+                    title="Thêm đếm ngược"
+                    className="rounded-lg bg-white p-1.5 text-black transition-colors hover:bg-white/90"
                 >
-                    <option value="daysSince" className="bg-slate-800">
-                        Số ngày đã trôi qua kể từ một ngày
-                    </option>
-                    <option value="dailyCountdown" className="bg-slate-800">
-                        Đếm ngược đến giờ hàng ngày
-                    </option>
-                    <option value="duration" className="bg-slate-800">
-                        Hẹn giờ đếm ngược (hh:mm:ss)
-                    </option>
-                    <option value="hoursUntil" className="bg-slate-800">
-                        Số giờ còn lại cho đến một ngày
-                    </option>
-                </select>
+                    <Plus size={18} />
+                </button>
+            </div>
 
-                <div className="flex items-center gap-2">
-                    <div className="relative min-w-0 flex-1">
-                        <input
-                            ref={inputRef}
-                            type={
-                                countdownType === "daysSince"
-                                    ? "date"
-                                    : countdownType === "dailyCountdown" || countdownType === "duration"
-                                    ? "time"
-                                    : "datetime-local"
-                            }
-                            step={countdownType === "duration" ? "1" : undefined}
-                            value={countdownType === "duration" ? duration : targetAt}
-                            onChange={(event) =>
-                                countdownType === "duration"
-                                    ? setDuration(event.target.value)
-                                    : setTargetAt(event.target.value)
-                            }
-                            onClick={openPicker}
-                            onFocus={openPicker}
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-white/50 [color-scheme:dark] cursor-pointer"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        aria-label="Thêm đếm ngược"
-                        className="rounded-lg bg-white p-2 text-black transition-colors hover:bg-white/90 shrink-0"
-                    >
-                        <Plus size={18} />
-                    </button>
-                </div>
-
-                {countdownType === "duration" && (
-                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        <span className="text-xs text-white/40 mr-1 flex items-center gap-1">
-                            <Clock size={12} /> Chọn nhanh:
-                        </span>
-                        {DURATION_PRESETS.map((preset) => (
-                            <button
-                                key={preset.value}
-                                type="button"
-                                onClick={() => setDuration(preset.value)}
-                                className={`px-2 py-0.5 rounded text-xs transition-colors ${
-                                    duration === preset.value
-                                        ? "bg-white text-black font-semibold"
-                                        : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
-                                }`}
-                            >
-                                {preset.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </form>
+            {isAdding && <AddCountdownDialog onAdd={saveNewCountdown} onClose={closeAdd} />}
 
             <div className="flex-1 space-y-2 overflow-y-auto pr-1">
                 {countdowns.length === 0 && (
-                    <div className="px-4 py-10 text-center text-sm text-white/30">
-                        Thêm một mốc thời gian đặc biệt để bắt đầu đếm.
-                    </div>
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="w-full rounded-xl border border-dashed border-white/15 px-4 py-10 text-center text-sm text-white/40 transition-colors hover:border-white/30 hover:text-white/70"
+                    >
+                        Chưa có mốc nào. Bấm + để thêm ngày đặc biệt.
+                    </button>
                 )}
 
                 {countdowns.map((countdown, index) => (
