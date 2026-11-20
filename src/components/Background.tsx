@@ -456,7 +456,7 @@ export default function Background({
 
   const renderEffect = () => (
     <div
-      className="absolute inset-0 w-full h-full pointer-events-none"
+      className="fixed inset-0 w-full h-full pointer-events-none"
       style={{ zIndex: 1 }}
     >
       <EffectsLayer type={effect} />
