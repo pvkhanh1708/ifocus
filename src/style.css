@@ -36,7 +36,7 @@ body {
 }
 
 .glass-panel {
-  background: rgba(20, 20, 20, 0.6);
+  background: rgba(20, 20, 20, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -295,7 +295,7 @@ button,
    stays visible) but blur hard enough that the timer behind it can't be read. */
 @media (max-width: 639px) {
   .glass-panel {
-    background: rgba(12, 16, 26, 0.55);
+    background: rgba(12, 16, 26, 0.4);
     -webkit-backdrop-filter: blur(28px) saturate(140%);
     backdrop-filter: blur(28px) saturate(140%);
   }
