@@ -23,6 +23,12 @@ const setPageColors = (color: string) => {
     // edge (our fixed app shell), not from the page background: the shell and
     // the background layer use this colour behind the image.
     root.style.setProperty("--scene-edge", color);
+    // Remembered so index.html can apply it before the first paint next launch.
+    try {
+        localStorage.setItem("ifocus-scene-edge", color);
+    } catch {
+        // Private mode / storage blocked: the colour is still applied now.
+    }
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
 };
 
