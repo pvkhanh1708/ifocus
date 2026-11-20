@@ -216,7 +216,7 @@ function LoadErrorScreen({
     onLogout: () => void;
 }) {
     return (
-        <main className="flex min-h-[var(--app-height,100dvh)] flex-col items-center bg-neutral-950 px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-white">
+        <main className="flex min-h-[100dvh] flex-col items-center bg-neutral-950 px-4 pt-[max(1rem,var(--safe-top))] pb-[max(1rem,env(safe-area-inset-bottom))] text-white">
             <div className="my-auto w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-6 text-center shadow-2xl">
                 <h1 className="text-lg font-semibold">Không tải được dữ liệu</h1>
                 <p className="mt-2 text-sm text-white/60">{message}</p>
@@ -306,12 +306,13 @@ function AppContent({
     const [panelWidth, setPanelWidth] = useLocalStorage<number>("panelWidth", PANEL_DEFAULT_WIDTH);
     const layoutRef = useRef<HTMLDivElement>(null);
 
-    // Hidden screen diagnostics: tap the logo 5 times within 2 seconds.
+    // Hidden screen diagnostics: tap the logo 5 times within 3 seconds. Counted
+    // on pointerup: iOS may swallow click events for fast repeated taps.
     const [showViewportDebug, setShowViewportDebug] = useState(false);
     const logoTapsRef = useRef<number[]>([]);
     const handleLogoTap = () => {
         const now = performance.now();
-        logoTapsRef.current = [...logoTapsRef.current.filter((t) => now - t < 2000), now];
+        logoTapsRef.current = [...logoTapsRef.current.filter((t) => now - t < 3000), now];
         if (logoTapsRef.current.length >= 5) {
             logoTapsRef.current = [];
             setShowViewportDebug(true);
@@ -330,6 +331,15 @@ function AppContent({
                 setVisitedPanels((prev) => new Set([...prev, activePanel]));
         }
     }, [activePanel, visitedPanels]);
+
+    // iPhone has no Fullscreen API, and an installed app is already full screen:
+    // only offer the button where it actually does something.
+    const canFullscreen =
+        typeof document !== "undefined" &&
+        !!document.fullscreenEnabled &&
+        !window.matchMedia("(display-mode: standalone)").matches &&
+        // Phones (touch, narrow): the browser UI makes it pointless.
+        !window.matchMedia("(pointer: coarse) and (max-width: 767px)").matches;
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
@@ -431,7 +441,7 @@ function AppContent({
     return (
         <div
             ref={layoutRef}
-            className="pip-capture-root relative w-full h-[var(--app-height,100dvh)] overflow-hidden font-sans"
+            className="pip-capture-root relative w-full h-[100dvh] overflow-hidden font-sans"
             // Shared by the side panel (its width) and the main layer (its right
             // padding), so the timer stays centred in the space left visible.
             style={{ ["--panel-width" as string]: `${clampPanelWidth(panelWidth)}px` }}
@@ -456,7 +466,7 @@ function AppContent({
                 <div className="flex justify-between items-center p-3 pt-[max(0.75rem,calc(var(--safe-top)+0.25rem))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pointer-events-auto">
                     <div
                         className="flex items-center gap-3 cursor-pointer hover:bg-white/10 rounded-lg p-2 transition-colors"
-                        onClick={handleLogoTap}
+                        onPointerUp={handleLogoTap}
                     >
                         <img
                             src="/icons/icon-192.png"
@@ -491,14 +501,16 @@ function AppContent({
                         >
                             <PictureInPicture2 size={20} />
                         </button>
-                        {/* Fullscreen button */}
-                        <button
-                            onClick={toggleFullscreen}
-                            className="p-3 text-white/70 hover:text-white transition-colors rounded-full hover:bg-white/10"
-                            title="Fullscreen"
-                        >
-                            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-                        </button>
+                        {/* Fullscreen button (hidden where unsupported / pointless) */}
+                        {canFullscreen && (
+                            <button
+                                onClick={toggleFullscreen}
+                                className="p-3 text-white/70 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                                title="Fullscreen"
+                            >
+                                {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                            </button>
+                        )}
 
                         {/* Hamburger menu for mobile */}
                         <button

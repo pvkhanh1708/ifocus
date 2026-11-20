@@ -266,6 +266,24 @@ body {
     :root {
       --pwa-fade: 20px;
     }
+    /* iOS 26 + black-translucent sizes the viewport one status-bar height short
+       (WebKit bug 301108). -webkit-fill-available was reported on a device to
+       reach the bottom on the main screen; if it does not, the leftover strip
+       is painted with the html background, which follows the scene colour
+       (utils/sceneEdgeColor.ts). */
+    html {
+      height: -webkit-fill-available;
+    }
+    body,
+    #root {
+      min-height: -webkit-fill-available;
+    }
+    #root,
+    .pip-capture-root {
+      /* Never smaller than before if fill-available resolves oddly. */
+      min-height: 100dvh;
+      height: -webkit-fill-available;
+    }
   }
 }
 

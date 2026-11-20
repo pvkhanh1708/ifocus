@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { YouTubeProps } from "react-youtube";
 import loadable from "@loadable/component";
 import { LoadingFallback } from "../utils/loader";
+import { applySceneEdgeColors } from "../utils/sceneEdgeColor";
 import {
   isAudioCaptureActive,
   getFrequencyBands,
@@ -192,6 +193,12 @@ export default function Background({
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : null;
   };
+
+  // Page background / theme-color follow the scene's edges (iOS paints the
+  // strip it won't let the page draw with the page background colour).
+  useEffect(() => {
+    applySceneEdgeColors(scene);
+  }, [scene]);
 
   // Reset states when scene changes
   useEffect(() => {

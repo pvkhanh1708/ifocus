@@ -52,11 +52,15 @@ export default function ViewportDebug({ onClose }: { onClose: () => void }) {
     }, []);
 
     return (
-        <div
-            className="fixed inset-x-3 top-[max(0.75rem,var(--safe-top))] z-[200] max-h-[80%] overflow-y-auto rounded-xl border border-white/20 bg-black/90 p-3 font-mono text-[11px] leading-snug text-white shadow-2xl"
-            onClick={onClose}
-        >
-            <div className="mb-2 font-sans text-xs font-semibold">Chẩn đoán màn hình (chạm để đóng)</div>
+        // Centred, not over the logo, and closed only by its button: the tap that
+        // opens it must not also close it (its click lands right after).
+        <div className="fixed inset-x-3 top-1/2 z-[200] max-h-[70%] -translate-y-1/2 overflow-y-auto rounded-xl border border-white/20 bg-black/90 p-3 font-mono text-[11px] leading-snug text-white shadow-2xl">
+            <div className="mb-2 flex items-center justify-between font-sans text-xs font-semibold">
+                <span>Chẩn đoán màn hình</span>
+                <button onClick={onClose} className="rounded-md bg-white/15 px-2 py-1 text-xs">
+                    Đóng
+                </button>
+            </div>
             {Object.entries(data).map(([key, value]) => (
                 <div key={key} className="break-all">
                     <span className="text-emerald-300">{key}:</span> {value}
