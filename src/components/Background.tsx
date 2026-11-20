@@ -194,8 +194,8 @@ export default function Background({
     return match && match[2].length === 11 ? match[2] : null;
   };
 
-  // Page background / theme-color follow the scene's edges (iOS paints the
-  // strip it won't let the page draw with the page background colour).
+  // Page background / theme-color follow the top edge of the scene: iOS paints
+  // the status-bar area of the installed app with the page background colour.
   useEffect(() => {
     applySceneEdgeColors(scene);
   }, [scene]);

@@ -1,23 +1,24 @@
 import type { Scene } from "../types";
 
 /**
- * Paint the page (html) background with the colour at the bottom edge of the
- * current scene, and the theme-color with its top edge.
+ * Paint the page (html) background and theme-color with the colour at the top
+ * edge of the current scene.
  *
- * Why: an installed iOS 26 app with the status bar drawn over the page
- * (black-translucent) cannot paint the bottom strip of the screen — a WebKit
- * regression (bug 301108); no CSS height reaches it. iOS fills that strip with
- * the page background colour, so matching it to the image makes the strip
- * blend in instead of showing a dark band.
+ * Why: the installed iOS app does not draw the page under the status bar (no
+ * black-translucent — with it, iOS 26 leaves an unpaintable strip at the
+ * bottom, WebKit bug 301108). iOS fills the status-bar area with the page
+ * background colour instead — that is why the hoctienganh app shows a light
+ * bar (its page background is #f3f6fb) and why ours was black (#09101e).
+ * Matching it to the top of the image makes the bar continue the scene.
  */
 
 const FALLBACK = "#09101e";
 // The background has a 20% black overlay on images (Background.tsx).
 const IMAGE_OVERLAY_DARKEN = 0.8;
 
-const setPageColors = (bottom: string, top: string = bottom) => {
-    document.documentElement.style.backgroundColor = bottom;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", top);
+const setPageColors = (color: string) => {
+    document.documentElement.style.backgroundColor = color;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
 };
 
 const toHex = (r: number, g: number, b: number) =>
@@ -52,9 +53,9 @@ export const applySceneEdgeColors = (scene: Scene) => {
         return;
     }
     if (scene.type === "gradient") {
-        // Use the first and last colour stops of the CSS gradient.
+        // Use the first colour stop of the CSS gradient.
         const stops = scene.url.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi);
-        if (stops?.length) setPageColors(stops[stops.length - 1], stops[0]);
+        if (stops?.length) setPageColors(stops[0]);
         else setPageColors(FALLBACK);
         return;
     }
@@ -78,7 +79,7 @@ export const applySceneEdgeColors = (scene: Scene) => {
             if (!ctx) return;
             // Same framing as object-fit: cover is not needed for edge bands.
             ctx.drawImage(img, 0, 0, size, size);
-            setPageColors(averageBand(ctx, size, 0.9, 1), averageBand(ctx, size, 0, 0.1));
+            setPageColors(averageBand(ctx, size, 0, 0.08));
         } catch {
             setPageColors(FALLBACK);
         }
