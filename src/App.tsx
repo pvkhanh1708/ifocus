@@ -11,7 +11,6 @@ import {
     Minimize2,
     Sparkles,
     PictureInPicture2,
-    Menu,
     CalendarHeart,
     LogOut,
 } from "lucide-react";
@@ -512,19 +511,6 @@ function AppContent({
                             </button>
                         )}
 
-                        {/* Hamburger menu for mobile */}
-                        <button
-                            onClick={() =>
-                                setActivePanel(!activePanel ? lastActivePanelRef.current : "")
-                            }
-                            className={`p-3 transition-colors rounded-full hover:bg-white/10 sm:hidden ${!!activePanel
-                                    ? "text-white bg-white/10"
-                                    : "text-white/70 hover:text-white"
-                                }`}
-                            title="Menu"
-                        >
-                            <Menu size={20} />
-                        </button>
                     </div>
                 </div>
 
@@ -538,10 +524,10 @@ function AppContent({
                 </div>
 
                 {/* Bottom Dock / Navigation */}
-                <div className="flex justify-center pb-[max(1.5rem,env(safe-area-inset-bottom))] pointer-events-auto hidden sm:flex">
+                <div className="flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-[max(1.5rem,env(safe-area-inset-bottom))] pointer-events-auto">
                     {/* We apply the same transition logic here to keep it centered relative to the timer */}
                     <div className={`transition-all duration-500`}>
-                        <div className="flex gap-0 sm:gap-2 p-2 bg-black/40 opacity-50 hover:opacity-100 hover:backdrop-blur transition-all rounded-2xl border border-white/10 shadow-2xl">
+                        <div className="flex gap-0 sm:gap-2 p-1.5 sm:p-2 bg-black/55 sm:bg-black/40 backdrop-blur sm:backdrop-blur-none opacity-100 sm:opacity-50 hover:opacity-100 hover:backdrop-blur transition-all rounded-2xl border border-white/10 shadow-2xl">
                             {Panels.filter((item) => !item.divider).map((item) => (
                                 <DockButton
                                     key={"dock-" + item.label}
@@ -651,7 +637,9 @@ const DockButton = ({
 }) => (
     <button
         onClick={onClick}
-        className={`group relative flex flex-col items-center justify-center w-14 h-14 rounded-xl transition-all duration-300 ${isActive
+        aria-label={label}
+        title={label}
+        className={`group relative flex flex-col items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl transition-all duration-300 ${isActive
                 ? "bg-white text-black shadow-lg"
                 : "text-white/70 hover:bg-white/10 hover:text-white hover:translate-y-[-2px]"
             }`}
